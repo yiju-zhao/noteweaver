@@ -1,5 +1,5 @@
-name: Build Loreweave
-description: Build pinned Loreweave assets for another private CARI-DAAL repository.
+name: Build Noteweave
+description: Build pinned Noteweave assets for another private CARI-DAAL repository.
 outputs:
   assets:
     description: Absolute directory containing the compiled release assets.
@@ -10,9 +10,9 @@ runs:
     - id: build
       shell: bash
       env:
-        LOREWEAVE_ACTION_PATH: ${{ github.action_path }}
+        NOTEWEAVE_ACTION_PATH: ${{ github.action_path }}
       run: |
-        cd "$LOREWEAVE_ACTION_PATH"
+        cd "$NOTEWEAVE_ACTION_PATH"
         npm ci --no-audit --no-fund
         npm run build
-        printf 'assets=%s/dist\n' "$LOREWEAVE_ACTION_PATH" >> "$GITHUB_OUTPUT"
+        printf 'assets=%s/dist\n' "$NOTEWEAVE_ACTION_PATH" >> "$GITHUB_OUTPUT"

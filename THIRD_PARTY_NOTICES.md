@@ -1,6 +1,6 @@
 # Third-party notices
 
-Loreweave bundles [yaml](https://github.com/eemeli/yaml), licensed under ISC:
+Noteweave bundles [yaml](https://github.com/eemeli/yaml), licensed under ISC:
 
 ```text
 Copyright Eemeli Aro <eemeli@gmail.com>

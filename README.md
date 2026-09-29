@@ -1,4 +1,4 @@
-# Loreweave
+# Noteweave
 
 An Obsidian plugin for schema-driven knowledge bases: directory-bound page types,
 frontmatter checks and templates, bidirectional relations, and read-only evidence
@@ -7,17 +7,17 @@ properties. Each vault supplies its own `.obsidian/kb-schema.json`.
 ## Install
 
 1. With an account that can access this private repository, download the plugin
-   from a [release](https://github.com/CARI-DAAL/loreweave/releases). GitHub CLI users can run:
+   from a [release](https://github.com/CARI-DAAL/noteweave/releases). GitHub CLI users can run:
 
    ```sh
    gh auth login
-   gh release download 0.4.1 --repo CARI-DAAL/loreweave --dir loreweave-release \
+   gh release download 0.4.2 --repo CARI-DAAL/noteweave --dir noteweave-release \
      --pattern main.js --pattern manifest.json --pattern styles.css
    ```
 2. Put the three files in `<vault>/.obsidian/plugins/kb-types/`.
 3. Add a compatible `.obsidian/kb-schema.json`. To try the plugin, use the included
    [example vault](example-vault/) and its synthetic notes.
-4. Reload Obsidian and enable **Loreweave** under Community plugins. Set `actor`
+4. Reload Obsidian and enable **Noteweave** under Community plugins. Set `actor`
    in the plugin settings, for example `human:demo`.
 
 Updates replace those three release files. Keep `data.json`: it holds your actor
@@ -50,7 +50,7 @@ a separate knowledge-bank checkout.
 
 ## Compatibility
 
-The display name and repository are **Loreweave**. The internal plugin ID remains
+The display name and repository are **Noteweave**. The internal plugin ID remains
 `kb-types`, retaining existing installations, settings and relation checkpoints.
 The vault's vocabulary file also remains `kb-schema.json`.
 
@@ -93,7 +93,7 @@ sharing supplies temporary read access without a personal token or stored secret
 ## Release
 
 Update the package, lockfile, manifest, and `versions.json`; run tests and build.
-Push a tag matching the manifest version, for example `0.4.1`. The release workflow
+Push a tag matching the manifest version, for example `0.4.2`. The release workflow
 builds and tests the tag and creates a draft GitHub Release with plugin files,
 the validation bundle, and checksums. Review and publish that draft.
 
