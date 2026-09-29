@@ -301,6 +301,11 @@ export function applyTemplate(text: string, spec: DirSpec, generated: { by: stri
  * all of it). A missing key goes before `sources`, where kb lift puts vocabulary keys.
  */
 export function setFrontmatterKey(text: string, key: string, value: string | string[]): string | null {
+  return setFrontmatterLines(text, key, keyLines(key, value));
+}
+
+/** Replace one YAML node while preserving every unrelated source byte. */
+export function setFrontmatterLines(text: string, key: string, lines: string[]): string | null {
   const { fm } = splitFrontmatter(text);
   if (fm === null) return null;
   const doc = parseDocument(fm, { schema: "failsafe", uniqueKeys: true });
@@ -320,7 +325,7 @@ export function setFrontmatterKey(text: string, key: string, value: string | str
     }
   }
   const indent = /^ */.exec(fm.slice(start))![0];
-  const fresh = keyLines(key, value).map((line) => indent + line).join("\n") + "\n";
+  const fresh = lines.map((line) => indent + line).join("\n") + "\n";
   const updated = fm.slice(0, start) + fresh + fm.slice(end);
   // Preserve the rest of the original file, including its closing fence/newline.
   const result = text.slice(0, 4) + updated + text.slice(4 + fm.length);

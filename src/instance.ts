@@ -1,5 +1,5 @@
 /** Instance paths are shared by the desktop plugin and release consumers. */
-export interface InstanceConfig { version: 1; paths?: { schema?: string; evidence?: string }; }
+export interface InstanceConfig { version: 1; paths?: { schema?: string; evidence?: string; bank?: string }; }
 export function readInstanceConfig(text: string): InstanceConfig {
   const data = JSON.parse(text);
   if (!data || data.version !== 1 || (data.paths !== undefined && (!data.paths || typeof data.paths !== "object" || Array.isArray(data.paths)))) {
@@ -7,6 +7,7 @@ export function readInstanceConfig(text: string): InstanceConfig {
   }
   schemaPath(data);
   relativePath(data.paths?.evidence ?? "evidence");
+  relativePath(data.paths?.bank ?? "bank");
   return data;
 }
 export function schemaPath(config: InstanceConfig): string {

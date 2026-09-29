@@ -4,7 +4,7 @@ description: 收录材料、创建或修改 Noteweave 知识页，处理弃用�
 ---
 # 写入知识
 
-先运行同一运行包的查询上下文脚本：`python3 <本 skill 目录>/../kb-query/scripts/context.py`；可传 `--vault <目标 vault 绝对路径>`。它定位实例并检查该实例要求的 Obsidian 前置条件。失败时按提示处理；多个知识库时使用用户指定的目标，不猜默认库。
+先运行同一运行包的查询上下文脚本：`node <本 skill 目录>/../kb-query/scripts/context.cjs`；可传 `--vault <目标 vault 绝对路径>`。它定位实例并检查该实例要求的 Obsidian 前置条件。失败时按提示处理；多个知识库时使用用户指定的目标，不猜默认库。
 
 读取返回的配置：`paths` 相对 vault，`commands` 相对 repository。现行规则从 `paths.policies` 按需读取，词表以 `paths.schema` 为准。Obsidian 命令的首参数使用返回的 `vault_name`，定位文件用 `path=<相对 vault 路径>`。配置和待审记录通过文件系统读取，知识通过实例规定的入口读取。
 
@@ -29,3 +29,5 @@ description: 收录材料、创建或修改 Noteweave 知识页，处理弃用�
 ## Schema
 
 现有词表不能表达已授权内容时，按实例政策提出增补。确认后修改唯一 schema，并使用 `commands.kb schema` 刷新只读文档，完成实例要求的检查后一起提交；生成区不手改。
+
+实例的 `commands.kb` 默认通过 Obsidian CLI 调用运行中的 Noteweave，检查结果可加 `--json`。连接失败就停止并处理前置条件；`--offline` 专供 CI 或明确指定的隔离测试，不作为日常操作的回退。

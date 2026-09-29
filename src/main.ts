@@ -1,3 +1,6 @@
+import type { ObsidianBank } from "./bank/obsidian";
+import { Request } from "./bank/operations";
+import { loadRegistry } from "./bank/registry";
 import { instanceSchemaPath, readInstanceConfig } from "./instance";
 // Noteweave: Obsidian glue for src/core.ts. The instance selects the vocabulary path.
 // Private property APIs are isolated in property-adapter.ts.
@@ -16,6 +19,15 @@ interface Settings { actor: string }
 const DEFAULTS: Settings = { actor: "" };
 
 export default class KbTypes extends Plugin {
+  readonly automationVersion = 1;
+  private bank?: ObsidianBank;
+  async runAutomation(request: Request) {
+    const { ObsidianBank } = await import("./bank/obsidian");
+    this.bank ??= new ObsidianBank(this.app);
+    const result = await this.bank.run(request);
+    if (result.changes.length) await this.syncRelations();
+    return result;
+  }
   settings: Settings = { ...DEFAULTS };
   schema: core.KbSchema | null = null;
   schemaError = "";
@@ -57,6 +69,10 @@ export default class KbTypes extends Plugin {
         if (!checking) this.chooseKey(file, spec);
         return true;
       } });
+    this.addCommand({ id: "check-bank", name: "检查完整知识库", callback: async () => {
+      const result = await this.runAutomation({ operation: "check" });
+      new Notice(result.code === 2 ? result.data.error : `Noteweave：${result.data.errors} 错误，${result.data.warnings} 警告`);
+    } });
     this.addCommand({ id: "check-vault", name: "检查全库 frontmatter", callback: () => void this.checkVault() });
     this.addCommand({ id: "show-findings", name: "打开检查面板", callback: () => void this.openView() });
     this.addCommand({ id: "sync-relations", name: "同步全库双向关系", callback: () => void this.syncRelations(true) });
@@ -183,7 +199,8 @@ export default class KbTypes extends Plugin {
       this.schemaError = "找不到实例词表：请检查 .kb/config.json 的 schema 路径";
     } else {
       try {
-        this.schema = core.readSchema(await this.app.vault.adapter.read(path));
+        const config = await this.app.vault.adapter.exists(".kb/config.json") ? readInstanceConfig(await this.app.vault.adapter.read(".kb/config.json")) : undefined;
+        this.schema = loadRegistry(await this.app.vault.adapter.read(path), config?.paths?.bank ?? "bank").schema;
         this.schemaError = "";
       } catch (e) {
         this.schemaError = `实例词表读取失败：${(e as Error).message}`;

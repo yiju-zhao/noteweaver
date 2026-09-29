@@ -44,8 +44,7 @@ the example. Review documents use frontmatter `status: open` for actionable item
 ## Install CLI and skills
 
 Download the same release's `runtime.zip` and verify its release SHA-256 before
-extracting into `.kb/runtime/`. Install Python 3.9+, PyYAML and Node.js 20+ for the
-CLI; installed JavaScript is already bundled, so npm installation is unnecessary.
+extracting into `.kb/runtime/`. Install Node.js 20+ for the CLI; installed JavaScript is already bundled, so npm installation is unnecessary.
 Run `.kb/runtime/cli/kb --root <vault> info` to verify the selected instance.
 Ignore `.kb/runtime/` and downloaded archives in the vault repository; commit the
 release version and hashes in that repository's lock file.
@@ -56,7 +55,7 @@ to the same entries. Maintain generic skill source in this repository's `skills/
 and change instance policy in the vault. Tool-specific or third-party skills stay
 with their own owners; `research_skills` names the available integrations.
 
-`kb-query/scripts/context.py` resolves its bound installed instance (or explicit
+`kb-query/scripts/context.cjs` resolves its bound installed instance (or explicit
 `--vault`) and checks the caller's Obsidian requirement. It verifies the vault path,
 not only the display name. Installing the skill globally by linking the instance's
 entry retains that binding when invoked from a different project.
@@ -79,3 +78,31 @@ exact base commit, be new in that diff, contain an explicit authorization and
 reasons, and list hashes of paired card/original deletions. Referenced or unlisted
 files remain protected. A receipt does not authorize subsequent cleanups; updating
 this instance policy is a human decision.
+
+## Automation and CI
+
+Run `.kb/runtime/cli/kb --root <vault> check --json` during normal work. The CLI
+selects the configured vault and calls `kb-types.runAutomation` through Obsidian
+CLI `eval`. The plugin verifies the absolute vault path and protocol version,
+returns findings with exit code 0 (pass), 1 (findings/conflicts), or 2 (execution
+failure). A missing plugin or failed connection stops the command; it never
+switches to filesystem writes automatically.
+
+`index`, `schema` and `lift` compute edits with the same pure core. The plugin
+checks the expected original content before writing, uses `Vault.process` for
+notes and the vault adapter for hidden policy documents. Concurrent edits stop
+the remaining writes; already completed edits can be inspected and rerun. This
+is not a transaction across files. `--check` and `--dry-run` return plans without
+writing. Search, read, rename and trash continue to use native Obsidian commands.
+
+For CI, run `.kb/runtime/cli/kb --root <vault> --offline check --json`. This calls
+the same bundled core without a desktop application. Offline writes are intended
+for explicitly selected isolated fixtures or migrations; everyday work uses the
+live adapter. Git must be available for history checks. Full automation is a
+desktop feature; regular plugin display does not load desktop automation modules.
+
+The `cli/runtime.cjs` bundle exports the Node adapter and pure operations for
+integration tests. It is versioned with the plugin, not a second rule implementation.
+Upgrading from 0.5 replaces Python runtime files; consumers that imported `kblib`
+must call the CLI or the TypeScript bundle instead. Instance installer scripts and
+consumer test harnesses may use Python independently of the Noteweave runtime.

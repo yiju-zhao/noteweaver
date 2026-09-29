@@ -4,7 +4,7 @@ description: 查询 Noteweave 知识库，核对断言出处与可信度，并�
 ---
 # 查询知识
 
-先用 Python 运行本 skill 目录下的 `scripts/context.py`：`python3 <本 skill 目录>/scripts/context.py`；可传 `--vault <目标 vault 绝对路径>`。它定位实例并检查该实例要求的 Obsidian 前置条件。失败时按提示处理；多个知识库时使用用户指定的目标，不猜默认库。
+先用 Node.js 运行本 skill 目录下的 `scripts/context.cjs`：`node <本 skill 目录>/scripts/context.cjs`；可传 `--vault <目标 vault 绝对路径>`。它定位实例并检查该实例要求的 Obsidian 前置条件。失败时按提示处理；多个知识库时使用用户指定的目标，不猜默认库。
 
 读取返回的配置：`paths` 相对 vault，`commands` 相对 repository。现行规则从 `paths.policies` 按需读取，词表以 `paths.schema` 为准。Obsidian 命令的首参数使用返回的 `vault_name`，定位文件用 `path=<相对 vault 路径>`。配置和待审记录通过文件系统读取，知识通过实例规定的入口读取。
 
@@ -15,3 +15,5 @@ description: 查询 Noteweave 知识库，核对断言出处与可信度，并�
 5. 回答给出页面路径、证据和可信度；快照值带 generated 时间，Claim 带 ID、basis 与适用时间。没有答案时说明缺口；只有用户授权写入时才转交 kb-write。
 
 引用范围是配置中的 bank 与 evidence。实例政策、待审材料和软件开发文档用于指导查询，不充当世界知识的证据。
+
+实例的 `commands.kb` 默认通过 Obsidian CLI 调用运行中的 Noteweave，检查结果可加 `--json`。连接失败就停止并处理前置条件；`--offline` 专供 CI 或明确指定的隔离测试，不作为日常操作的回退。

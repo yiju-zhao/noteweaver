@@ -11,7 +11,7 @@ properties. Each vault supplies its own `.kb/config.json`, schema and policies.
 
    ```sh
    gh auth login
-   gh release download 0.5.1 --repo CARI-DAAL/noteweave --dir noteweave-release \
+   gh release download 0.6.0 --repo CARI-DAAL/noteweave --dir noteweave-release \
      --pattern main.js --pattern manifest.json --pattern styles.css
    ```
 2. Put the three files in `<vault>/.obsidian/plugins/kb-types/`.
@@ -48,7 +48,7 @@ optional validation bundle, not for installing the plugin in Obsidian.
 The current interface uses Chinese labels. This release targets knowledge bases
 using the documented schema and evidence conventions; see [schema format](docs/schema.md).
 It does not bundle a team's vocabulary or content. The desktop plugin runs without
-Python; the optional CLI requires Python, PyYAML and Node.js.
+Python; the optional CLI requires Node.js 20+.
 
 ## Compatibility
 
@@ -68,7 +68,7 @@ Migration is explicit and never overwrites a vocabulary. See [instances and skil
 
 ## Develop
 
-Requires Node.js 20+, npm and Python 3.9+; CLI tests also need PyYAML.
+Requires Node.js 20+ and npm. Tests and packaging use Node.js.
 
 ```sh
 npm ci
@@ -90,7 +90,7 @@ Downstream consumers should pin the release and verify its checksum before use.
 ## Private CI consumers
 
 Other private CARI-DAAL repositories can use the composite action in this
-repository, pinned to a full commit SHA. The caller provides Node.js 20+ and Python 3.9+; the
+repository, pinned to a full commit SHA. The caller provides Node.js 20+; the
 `assets` output points to the built release files. The caller should verify those
 files against its own pinned release checksums. GitHub’s organization-only action
 sharing supplies temporary read access without a personal token or stored secret.
@@ -98,7 +98,7 @@ sharing supplies temporary read access without a personal token or stored secret
 ## Release
 
 Update the package, lockfile, manifest, and `versions.json`; run tests and build.
-Push a tag matching the manifest version, for example `0.5.1`. The release workflow
+Push a tag matching the manifest version, for example `0.6.0`. The release workflow
 builds and tests the tag and creates a draft GitHub Release with plugin files,
 the validation bundle, runtime.zip (CLI and skills), and checksums. Review and publish that draft.
 
@@ -109,4 +109,4 @@ The bundled YAML dependency is covered by [third-party notices](THIRD_PARTY_NOTI
 
 ## CLI and agent skills
 
-The same release includes `runtime.zip`: the CLI, generic `kb-query`, `kb-write` and `kb-research` skills, and the shared validation bundle. The CLI calls the same TypeScript frontmatter validator as the plugin and adds evidence, Claim, index and Git-history checks. See [instance installation](docs/instances.md).
+The same release includes `runtime.zip`: the CLI, generic `kb-query`, `kb-write` and `kb-research` skills, and the shared validation bundle. The plugin and CLI execute the same TypeScript knowledge-bank core: schema, frontmatter, Claim, evidence, index, references and Git-history checks. Normal CLI commands call the running plugin through Obsidian CLI and return structured results; `--offline` explicitly selects the filesystem adapter for CI or isolated fixtures. See [instance installation](docs/instances.md).
