@@ -1,4 +1,4 @@
-# KB Types
+# Loreweave
 
 An Obsidian plugin for schema-driven knowledge bases: directory-bound page types,
 frontmatter checks and templates, bidirectional relations, and read-only evidence
@@ -6,12 +6,18 @@ properties. Each vault supplies its own `.obsidian/kb-schema.json`.
 
 ## Install
 
-1. Download `main.js`, `manifest.json`, and `styles.css` from a
-   [release](https://github.com/CARI-DAAL/kb-types/releases).
+1. With an account that can access this private repository, download the plugin
+   from a [release](https://github.com/CARI-DAAL/loreweave/releases). GitHub CLI users can run:
+
+   ```sh
+   gh auth login
+   gh release download 0.4.0 --repo CARI-DAAL/loreweave --dir loreweave-release \
+     --pattern main.js --pattern manifest.json --pattern styles.css
+   ```
 2. Put the three files in `<vault>/.obsidian/plugins/kb-types/`.
 3. Add a compatible `.obsidian/kb-schema.json`. To try the plugin, use the included
    [example vault](example-vault/) and its synthetic notes.
-4. Reload Obsidian and enable **KB Types** under Community plugins. Set `actor`
+4. Reload Obsidian and enable **Loreweave** under Community plugins. Set `actor`
    in the plugin settings, for example `human:demo`.
 
 Updates replace those three release files. Keep `data.json`: it holds your actor
@@ -43,6 +49,10 @@ It does not bundle a team's vocabulary or content, and does not require Python o
 a separate knowledge-bank checkout.
 
 ## Compatibility
+
+The display name and repository are **Loreweave**. The internal plugin ID remains
+`kb-types`, retaining existing installations, settings and relation checkpoints.
+The vault's vocabulary file also remains `kb-schema.json`.
 
 - Schema format: **3**. Unsupported schema versions stop schema-dependent work.
 - Obsidian minimum: **1.12.7**. Desktop behavior was tested on **1.13.7**.
@@ -81,5 +91,5 @@ the validation bundle, and checksums. Review and publish that draft.
 
 ## License
 
-The project license is awaiting the owner’s selection before public release.
+This is a private CARI-DAAL repository. An open-source license has not been selected.
 The bundled YAML dependency is covered by [third-party notices](THIRD_PARTY_NOTICES.md).

@@ -1,5 +1,5 @@
 {
-  "name": "kb-types",
+  "name": "loreweave",
   "version": "0.4.0",
   "private": true,
   "description": "Schema-driven page types, validation, bidirectional relations and evidence navigation for Obsidian.",
@@ -19,7 +19,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/CARI-DAAL/kb-types.git"
+    "url": "https://github.com/CARI-DAAL/loreweave.git"
   },
   "engines": {
     "node": ">=20"

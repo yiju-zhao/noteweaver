@@ -1,7 +1,7 @@
 # Schema format 3
 
 The vocabulary belongs to the vault, at `<vault config directory>/kb-schema.json`
-(normally `.obsidian/kb-schema.json`). KB Types reads it; it does not ship or update
+(normally `.obsidian/kb-schema.json`). Loreweave reads it; it does not ship or update
 the vocabulary. The [synthetic example](../example-vault/.obsidian/kb-schema.json)
 is a complete, minimal starting point for this plugin.
 
@@ -20,7 +20,7 @@ is a complete, minimal starting point for this plugin.
 | `kinds`, `scope_keys`, `units`, `jev` | Required object sections for vocabulary metadata. The example leaves unused metadata empty. |
 
 Extra metadata can describe terms for people or other tools. This example satisfies
-KB Types, not every possible downstream knowledge-base validator.
+Loreweave, not every possible downstream knowledge-base validator.
 
 ## Directory bindings
 

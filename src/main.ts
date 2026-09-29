@@ -1,4 +1,4 @@
-// kb-types: Obsidian glue for src/core.ts. Reads <vault>/.obsidian/kb-schema.json, which
+// Loreweave: Obsidian glue for src/core.ts. Reads <vault>/.obsidian/kb-schema.json, which
 // defines this vault’s vocabulary. Private property APIs are isolated in property-adapter.ts.
 import {
   App, debounce, Editor, EditorPosition, EditorSuggest, EditorSuggestContext, EditorSuggestTriggerInfo, getIcon,
@@ -59,7 +59,7 @@ export default class KbTypes extends Plugin {
     this.addCommand({ id: "sync-relations", name: "同步全库双向关系", callback: () => void this.syncRelations(true) });
     this.addCommand({ id: "reload-schema", name: "重新读取 kb-schema.json",
       callback: async () => { this.schemaMtime = -1; await this.refresh(); await this.syncRelations();
-        new Notice(this.schemaError || "kb-types：已重新读取 schema"); } });
+        new Notice(this.schemaError || "Loreweave：已重新读取 schema"); } });
 
     this.app.workspace.onLayoutReady(async () => {
       // Registered after the vault has loaded, so only files created from now on count as new.
@@ -83,7 +83,7 @@ export default class KbTypes extends Plugin {
       }));
       await this.refresh();
       if (!installReadonlyProperties(this, (file) => Boolean(this.specFor(file)))) {
-        new Notice("kb-types：当前 Obsidian 不支持只读嵌套展示，请在源码中查看 generated、sources、verified", 10000);
+        new Notice("Loreweave：当前 Obsidian 不支持只读嵌套展示，请在源码中查看 generated、sources、verified", 10000);
       }
       await this.syncRelations();
     });
@@ -118,7 +118,7 @@ export default class KbTypes extends Plugin {
         this.views().forEach((v) => v.render());
         if (plan.issues.length) {
           const message = plan.issues.map((i) => `${i.path}: ${i.message}`).join("\n");
-          if (notify || message !== this.lastRelationError) new Notice(`kb-types：关系同步暂停\n${message}`, 10000);
+          if (notify || message !== this.lastRelationError) new Notice(`Loreweave：关系同步暂停\n${message}`, 10000);
           this.lastRelationError = message;
           return;
         }
@@ -143,12 +143,12 @@ export default class KbTypes extends Plugin {
     })();
     try {
       await this.syncing;
-      if (notify && !this.relationIssues.length) new Notice(`kb-types：双向关系已同步，更新 ${writes} 页`);
+      if (notify && !this.relationIssues.length) new Notice(`Loreweave：双向关系已同步，更新 ${writes} 页`);
     } catch (e) {
       // Do not checkpoint a partial write. Retry on the next edit or explicit sync;
       // the old agreed edges preserve the user's additions and removals.
       this.lastRelationError = (e as Error).message;
-      new Notice(`kb-types：${this.lastRelationError}`, 10000);
+      new Notice(`Loreweave：${this.lastRelationError}`, 10000);
     } finally {
       this.syncing = null;
       if (this.syncAgain && !this.stopped) this.syncSoon();
@@ -227,7 +227,7 @@ export default class KbTypes extends Plugin {
       applied = out !== null;
       return out ?? text;
     });
-    if (applied && !this.settings.actor) new Notice("kb-types：在插件设置里填 actor（如 human:demo），generated.by 才会自动写好");
+    if (applied && !this.settings.actor) new Notice("Loreweave：在插件设置里填 actor（如 human:demo），generated.by 才会自动写好");
   }
 
   async refresh() {
@@ -270,12 +270,12 @@ export default class KbTypes extends Plugin {
     el.empty();
     el.removeClass("kb-types-error", "kb-types-warning");
     if (!this.schema) {
-      el.setText("kb: 无 schema");
+      el.setText("Loreweave: 无 schema");
       el.setAttr("aria-label", this.schemaError);
       return;
     }
     if (this.relationIssues.length) {
-      el.setText(`kb: ${this.relationIssues.length} 项关系待处理`);
+      el.setText(`Loreweave: ${this.relationIssues.length} 项关系待处理`);
       el.addClass("kb-types-error");
       el.setAttr("aria-label", "双向关系未同步，点开看详情");
       return;
@@ -283,7 +283,7 @@ export default class KbTypes extends Plugin {
     if (!this.current) return;
     const errors = this.current.findings.filter((f) => f.severity === "error").length;
     const warnings = this.current.findings.length - errors;
-    el.setText(errors || warnings ? `kb: ${errors} 错误 · ${warnings} 警告` : "kb ✓");
+    el.setText(errors || warnings ? `Loreweave: ${errors} 错误 · ${warnings} 警告` : "Loreweave ✓");
     if (errors) el.addClass("kb-types-error");
     else if (warnings) el.addClass("kb-types-warning");
     el.setAttr("aria-label", "frontmatter 检查（点开看详情）");
@@ -446,7 +446,7 @@ class FrontmatterSuggest extends EditorSuggest<string> {
 class FindingsView extends ItemView {
   constructor(leaf: WorkspaceLeaf, private plugin: KbTypes) { super(leaf); }
   getViewType() { return VIEW; }
-  getDisplayText() { return "kb 检查"; }
+  getDisplayText() { return "Loreweave 检查"; }
   getIcon() { return "shield-check"; }
   async onOpen() { this.render(); }
 
