@@ -1,0 +1,258 @@
+{
+  "version": 3,
+  "base_required": [
+    "type",
+    "title",
+    "description",
+    "generated"
+  ],
+  "special_values": [
+    "unknown",
+    "none"
+  ],
+  "formats": {
+    "quantity": "^[+-]?(\\d+(\\.\\d*)?|\\.\\d+)([eE][+-]?\\d+)?[KMBT]?$",
+    "time": [
+      "^\\d{4}(?:-(?:0[1-9]|1[0-2])(?:-(?:0[1-9]|[12]\\d|3[01]))?)?$",
+      "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}(:\\d{2}(\\.\\d+)?)?(Z|[+-]\\d{2}:\\d{2})$"
+    ],
+    "wikilink": "^\\[\\[([^\\[\\]]+)\\]\\]$"
+  },
+  "kinds": {
+    "entity": {},
+    "concept": {}
+  },
+  "scope_keys": {},
+  "units": {},
+  "jev": {},
+  "enums": {
+    "license": {
+      "mit": "MIT",
+      "apache-2.0": "Apache-2.0",
+      "proprietary": "Proprietary"
+    }
+  },
+  "attributes": {
+    "license": {
+      "label": "许可证",
+      "value": "enum",
+      "subject": [
+        {
+          "type": "entity",
+          "class": [
+            "model"
+          ]
+        }
+      ],
+      "object": [],
+      "place": "frontmatter",
+      "multi": false,
+      "enum": "license"
+    },
+    "layers": {
+      "label": "层数",
+      "value": "quantity",
+      "subject": [
+        {
+          "type": "entity",
+          "class": [
+            "model"
+          ]
+        }
+      ],
+      "object": [],
+      "place": "frontmatter",
+      "multi": false,
+      "unit": "layer"
+    },
+    "params-total": {
+      "label": "总参数量",
+      "value": "quantity",
+      "subject": [
+        {
+          "type": "entity",
+          "class": [
+            "model"
+          ]
+        }
+      ],
+      "object": [],
+      "place": "frontmatter",
+      "multi": false,
+      "unit": "parameter"
+    },
+    "released": {
+      "label": "发布时间",
+      "value": "time",
+      "subject": [
+        {
+          "type": "entity",
+          "class": [
+            "model"
+          ]
+        }
+      ],
+      "object": [],
+      "place": "frontmatter",
+      "multi": false
+    },
+    "founded": {
+      "label": "成立时间",
+      "value": "time",
+      "subject": [
+        {
+          "type": "entity",
+          "class": [
+            "organization"
+          ]
+        }
+      ],
+      "object": [],
+      "place": "frontmatter",
+      "multi": false
+    },
+    "tpf": {
+      "label": "每次前向 token 数",
+      "value": "quantity",
+      "subject": [
+        {
+          "type": "entity",
+          "class": [
+            "model"
+          ]
+        }
+      ],
+      "object": [],
+      "place": "claim",
+      "multi": false,
+      "unit": "token/forward"
+    }
+  },
+  "predicates": {
+    "developed_by": {
+      "label": "开发方",
+      "value": "page",
+      "subject": [
+        {
+          "type": "entity",
+          "class": [
+            "model"
+          ]
+        }
+      ],
+      "object": [
+        {
+          "type": "entity",
+          "class": [
+            "organization",
+            "person"
+          ]
+        }
+      ],
+      "place": "frontmatter",
+      "multi": true,
+      "inverse": "开发了",
+      "inverse_key": "developed",
+      "inverse_multi": true
+    },
+    "part_of": {
+      "label": "属于",
+      "value": "page",
+      "subject": [
+        {
+          "type": "entity"
+        }
+      ],
+      "object": [
+        {
+          "type": "entity",
+          "class": "SAME"
+        }
+      ],
+      "place": "frontmatter",
+      "multi": true,
+      "inverse": "组成",
+      "inverse_key": "parts",
+      "inverse_multi": true
+    },
+    "instance_of": {
+      "label": "是一种",
+      "value": "page",
+      "subject": [
+        {
+          "type": "entity"
+        }
+      ],
+      "object": [
+        {
+          "type": "concept"
+        }
+      ],
+      "place": "frontmatter",
+      "multi": true,
+      "inverse": "实例",
+      "inverse_key": "instances",
+      "inverse_multi": true
+    },
+    "initialized_from": {
+      "label": "初始化自",
+      "value": "page",
+      "subject": [
+        {
+          "type": "entity",
+          "class": [
+            "model"
+          ]
+        }
+      ],
+      "object": [
+        {
+          "type": "entity",
+          "class": [
+            "model"
+          ]
+        }
+      ],
+      "place": "frontmatter",
+      "multi": false,
+      "inverse": "派生模型",
+      "inverse_key": "derived_models",
+      "inverse_multi": true
+    }
+  },
+  "directories": {
+    "bank/entities/models": {
+      "type": "entity",
+      "class": "model",
+      "icon": "brain",
+      "required": [
+        "developed_by",
+        "instance_of",
+        "initialized_from",
+        "released",
+        "license",
+        "params-total"
+      ]
+    },
+    "bank/entities/organizations": {
+      "type": "entity",
+      "class": "organization",
+      "icon": "building-2",
+      "required": [
+        "founded"
+      ]
+    },
+    "bank/entities/people": {
+      "type": "entity",
+      "class": "person",
+      "icon": "user",
+      "required": []
+    },
+    "bank/concepts": {
+      "type": "concept",
+      "class": null,
+      "icon": "lightbulb",
+      "required": []
+    }
+  }
+}

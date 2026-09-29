@@ -1,0 +1,32 @@
+/* kb-types: status bar, findings view and the ## 断言 table. File-tree icons are generated from kb-schema.json. */
+.kb-types-status.kb-types-error { color: var(--text-error); }
+.kb-types-status.kb-types-warning { color: var(--text-warning); }
+
+.kb-types-view .kb-types-error { color: var(--text-error); }
+.kb-types-view .kb-types-warning { color: var(--text-warning); }
+.kb-types-view .kb-types-muted { color: var(--text-muted); font-size: var(--font-ui-small); }
+.kb-types-view .kb-types-bar { display: flex; align-items: center; justify-content: space-between; margin-top: 1em; }
+.kb-types-view .kb-types-file { margin-top: 0.6em; font-size: var(--font-ui-small); }
+.kb-types-view ul { margin: 0.2em 0; padding-inline-start: 1.2em; }
+.kb-types-view code { font-size: 0.85em; }
+
+.kb-claims { overflow-x: auto; margin: 0.5em 0 1em; }
+.kb-claims table { font-size: var(--font-smaller); border-collapse: collapse; }
+.kb-claims th, .kb-claims td { vertical-align: top; }
+.kb-claims .kb-claim-retracted td { text-decoration: line-through; color: var(--text-muted); }
+.kb-claims .kb-claim-retracted td:last-child { text-decoration: none; }
+.kb-claims .kb-claims-error { color: var(--text-error); }
+.kb-claims-yaml summary { color: var(--text-muted); font-size: var(--font-ui-small); cursor: pointer; }
+
+.metadata-property-value.kb-nested { display: block; min-width: 0; padding: 0.25em 0; }
+.kb-nested-fields { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 0.2em 0.8em; margin: 0; }
+.kb-nested-fields dt, .kb-nested-source-id { color: var(--text-muted); font-size: var(--font-smaller); }
+.kb-nested-fields dd { margin: 0; overflow-wrap: anywhere; }
+.kb-nested-list { margin: 0.3em 0; padding-inline-start: 1.4em; }
+.kb-nested-list > li { margin-block: 0.45em; }
+.kb-nested-source-id { display: block; background: none; padding: 0; }
+.kb-nested-source a { overflow-wrap: anywhere; }
+.kb-nested-sources > summary { cursor: pointer; color: var(--text-muted); }
+.kb-nested-muted { color: var(--text-muted); font-size: var(--font-smaller); }
+.kb-nested-missing { color: var(--text-error); overflow-wrap: anywhere; }
+.kb-nested-scalar { white-space: pre-wrap; }

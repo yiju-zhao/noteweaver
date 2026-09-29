@@ -1,0 +1,4 @@
+node_modules/
+dist/
+example-vault/.obsidian/plugins/
+example-vault/.obsidian/workspace*.json
