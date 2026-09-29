@@ -11,7 +11,7 @@ properties. Each vault supplies its own `.obsidian/kb-schema.json`.
 
    ```sh
    gh auth login
-   gh release download 0.4.0 --repo CARI-DAAL/loreweave --dir loreweave-release \
+   gh release download 0.4.1 --repo CARI-DAAL/loreweave --dir loreweave-release \
      --pattern main.js --pattern manifest.json --pattern styles.css
    ```
 2. Put the three files in `<vault>/.obsidian/plugins/kb-types/`.
@@ -82,10 +82,18 @@ with no npm install required. It exports `apiVersion` (1), `schemaVersion` (3),
 `claimedAttributes`, and `checkRelations`. It never loads Obsidian or writes files.
 Downstream consumers should pin the release and verify its checksum before use.
 
+## Private CI consumers
+
+Other private CARI-DAAL repositories can use the composite action in this
+repository, pinned to a full commit SHA. The caller provides Node.js 20+; the
+`assets` output points to the built release files. The caller should verify those
+files against its own pinned release checksums. GitHub’s organization-only action
+sharing supplies temporary read access without a personal token or stored secret.
+
 ## Release
 
 Update the package, lockfile, manifest, and `versions.json`; run tests and build.
-Push a tag matching the manifest version, for example `0.4.0`. The release workflow
+Push a tag matching the manifest version, for example `0.4.1`. The release workflow
 builds and tests the tag and creates a draft GitHub Release with plugin files,
 the validation bundle, and checksums. Review and publish that draft.
 
