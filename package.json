@@ -1,6 +1,6 @@
 {
   "name": "noteweave",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "private": true,
   "description": "Schema-driven page types, validation, bidirectional relations and evidence navigation for Obsidian.",
   "type": "module",

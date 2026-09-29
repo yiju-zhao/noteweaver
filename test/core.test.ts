@@ -187,3 +187,15 @@ test("icon CSS covers every bound directory and skips unknown icons", () => {
   assert.match(css, /data-path="bank\/entities\/models"/);
   assert.equal(css.split("-webkit-mask:").length - 1, 1);
 });
+
+test("entity parent folders have their own icon without overriding child icons or binding pages", () => {
+  const css = iconCss(schema, (icon) => `<svg data-icon="${icon}"/>`);
+  assert.match(css, /\.nav-folder-title\[data-path="bank\/entities"\]/);
+  assert.doesNotMatch(css, /data-path\^="bank\/entities\/"/);
+  assert.equal(specFor(schema, "bank/entities/untyped.md"), undefined);
+  const moved = { ...schema, directories: Object.fromEntries(Object.entries(schema.directories)
+    .map(([path, spec]) => [path.replace("bank/entities", "notes/objects"), spec])) };
+  const movedCss = iconCss(moved, (icon) => `<svg data-icon="${icon}"/>`);
+  assert.match(movedCss, /data-path="notes\/objects"/);
+  assert.doesNotMatch(movedCss, /data-path="bank\/entities"/);
+});

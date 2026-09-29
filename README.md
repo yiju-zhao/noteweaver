@@ -11,7 +11,7 @@ properties. Each vault supplies its own `.kb/config.json`, schema and policies.
 
    ```sh
    gh auth login
-   gh release download 0.5.0 --repo CARI-DAAL/noteweave --dir noteweave-release \
+   gh release download 0.5.1 --repo CARI-DAAL/noteweave --dir noteweave-release \
      --pattern main.js --pattern manifest.json --pattern styles.css
    ```
 2. Put the three files in `<vault>/.obsidian/plugins/kb-types/`.
@@ -30,6 +30,7 @@ optional validation bundle, not for installing the plugin in Obsidian.
 
 ## Use
 
+- Entity grouping folders have a collection icon; class folders and pages retain their schema icons.
 - Create an empty note in a schema-bound directory to receive its frontmatter
   template. Existing content is preserved.
 - Use **按 schema 设置属性值** to choose a vocabulary property and its allowed values.
@@ -39,6 +40,7 @@ optional validation bundle, not for installing the plugin in Obsidian.
   including removals, renames, and deletions. Conflicting relations pause writes
   and appear in the findings panel. **同步全库双向关系** runs reconciliation explicitly.
 - `generated`, `verified`, and `sources` are displayed read-only in Properties.
+  Their icons distinguish generation history, verification and source evidence.
   Evidence links resolve to exact `source`/`record` card paths. Edit these values in
   source mode to preserve YAML formatting and numeric precision.
 - A YAML block under `## 断言` is rendered as a claims table in reading view.
@@ -96,7 +98,7 @@ sharing supplies temporary read access without a personal token or stored secret
 ## Release
 
 Update the package, lockfile, manifest, and `versions.json`; run tests and build.
-Push a tag matching the manifest version, for example `0.5.0`. The release workflow
+Push a tag matching the manifest version, for example `0.5.1`. The release workflow
 builds and tests the tag and creates a draft GitHub Release with plugin files,
 the validation bundle, runtime.zip (CLI and skills), and checksums. Review and publish that draft.
 

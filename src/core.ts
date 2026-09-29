@@ -464,13 +464,22 @@ export function claimRows(schema: KbSchema | null, yamlText: string): { rows: Cl
 /** CSS that puts each bound directory's icon before its pages and folder in the file explorer. */
 export function iconCss(schema: KbSchema, svgFor: (icon: string) => string | null): string {
   const rules: string[] = [];
-  for (const [dir, spec] of Object.entries(schema.directories)) {
-    const svg = svgFor(spec.icon);
+  const entries = Object.entries(schema.directories);
+  // Entity classes bind pages; their grouping folders still need a folder-only icon.
+  const parents = new Set(entries.filter(([, spec]) => spec.type === "entity" && spec.class)
+    .map(([dir]) => dir.substring(0, dir.lastIndexOf("/")))
+    .filter((dir) => dir && !(dir in schema.directories)));
+  const icons = [
+    ...[...parents].map((dir) => ({ dir, icon: "boxes", pages: false })),
+    ...entries.map(([dir, spec]) => ({ dir, icon: spec.icon, pages: true })),
+  ];
+  for (const { dir, icon, pages } of icons) {
+    const svg = svgFor(icon);
     if (!svg) continue;
     const url = `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
     const d = dir.replace(/"/g, '\\"');
     rules.push(
-      `.nav-file-title[data-path^="${d}/"]:not([data-path$="/index.md"]):not([data-path$="/log.md"]) .nav-file-title-content::before,\n` +
+      (pages ? `.nav-file-title[data-path^="${d}/"]:not([data-path$="/index.md"]):not([data-path$="/log.md"]) .nav-file-title-content::before,\n` : "") +
       `.nav-folder-title[data-path="${d}"] .nav-folder-title-content::before {\n` +
       `  content: ""; display: inline-block; width: 14px; height: 14px; margin-inline-end: 4px; vertical-align: -2px;\n` +
       `  background-color: currentColor; opacity: 0.7; -webkit-mask: ${url} center / contain no-repeat; mask: ${url} center / contain no-repeat;\n}`);

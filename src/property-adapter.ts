@@ -1,9 +1,13 @@
 /** The only private Obsidian interface used by the read-only property renderer.
  * Tested on 1.13.7. Wrapping render preserves native type inference/serialization;
  * neither ctx.onChange nor processFrontMatter is exposed to the display layer. */
-import { Keymap, Notice, Plugin, TFile } from "obsidian";
+import { Keymap, Notice, Plugin, setIcon, TFile } from "obsidian";
 import { readFrontmatter } from "./core";
 import { evidencePath, NESTED_KEYS, renderNested, type EvidenceLink } from "./nested";
+
+const PROPERTY_ICONS: Record<string, string> = {
+  generated: "history", sources: "book-open", verified: "badge-check",
+};
 
 interface Context { key?: string; sourcePath?: string }
 interface Widget {
@@ -61,6 +65,10 @@ export function installReadonlyProperties(plugin: Plugin, isBankPage: (file: TFi
       // quantities and timestamps. The native cache's parsed numbers are unused.
       void plugin.app.vault.cachedRead(file).then(async (text) => {
         if (!active || pending.get(el) !== token || !el.isConnected) return;
+        // Native metadata rows use the unknown-type icon for nested YAML. Change
+        // only this rendered bank property, keeping the shared widget/type intact.
+        const icon = el.closest(".metadata-property")?.querySelector<HTMLElement>(".metadata-property-icon");
+        if (icon) setIcon(icon, PROPERTY_ICONS[key]);
         const { data, error } = readFrontmatter(text);
         if (error) { el.textContent = error; return; }
         const links = new Map<string, EvidenceLink>();
