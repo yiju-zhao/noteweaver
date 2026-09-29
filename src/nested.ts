@@ -6,7 +6,7 @@ export type EvidenceLookup = (path: string) => EvidenceLink | undefined;
 
 /** Resolve the literal resource relative to its bank page, never by basename.
  * Only evidence cards inside this vault are eligible for navigation. */
-export function evidencePath(sourcePath: string, resource: unknown): string | undefined {
+export function evidencePath(sourcePath: string, resource: unknown, evidenceRoot = "evidence"): string | undefined {
   if (typeof resource !== "string" || !resource || /^[a-z][a-z0-9+.-]*:/i.test(resource)
       || /[\\?#\[\]]/.test(resource) || resource.startsWith("/")) return;
   const parts = sourcePath.split("/").slice(0, -1);
@@ -15,11 +15,12 @@ export function evidencePath(sourcePath: string, resource: unknown): string | un
     else if (part && part !== ".") parts.push(part);
   }
   const path = parts.join("/");
-  return /^evidence\/(sources|records)\/[^/]+\/[^/]+\.md$/.test(path) ? path : undefined;
+  if (!path.startsWith(evidenceRoot + "/")) return;
+  return /^(sources|records)\/[^/]+\/[^/]+\.md$/.test(path.slice(evidenceRoot.length + 1)) ? path : undefined;
 }
 
-export function evidenceLink(sourcePath: string, resource: unknown, lookup: EvidenceLookup): EvidenceLink | undefined {
-  const path = evidencePath(sourcePath, resource);
+export function evidenceLink(sourcePath: string, resource: unknown, lookup: EvidenceLookup, evidenceRoot = "evidence"): EvidenceLink | undefined {
+  const path = evidencePath(sourcePath, resource, evidenceRoot);
   return path ? lookup(path) : undefined;
 }
 
@@ -63,7 +64,7 @@ function tree(parent: HTMLElement, value: unknown, seen = new Set<unknown>(), de
 
 export function renderNested(
   root: HTMLElement, key: string, value: unknown, sourcePath: string,
-  lookup: EvidenceLookup, open: (link: EvidenceLink, event: MouseEvent) => void,
+  lookup: EvidenceLookup, open: (link: EvidenceLink, event: MouseEvent) => void, evidenceRoot = "evidence",
 ) {
   root.replaceChildren();
   root.classList.add("kb-nested");
@@ -78,7 +79,7 @@ export function renderNested(
     const item = element(list, "li", "kb-nested-source");
     if (!object(entry)) { tree(item, entry); continue; }
     element(item, "code", "kb-nested-source-id", scalar(entry.id));
-    const link = evidenceLink(sourcePath, entry.resource, lookup);
+    const link = evidenceLink(sourcePath, entry.resource, lookup, evidenceRoot);
     if (link) {
       const a = element(item, "a", "internal-link kb-nested-evidence", link.title);
       a.setAttribute("href", link.path);

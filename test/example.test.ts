@@ -6,9 +6,9 @@ import { readSchema, readFrontmatter, specFor, pageName, validate, claimedAttrib
 
 test("the standalone example has valid frontmatter and synchronized relations", () => {
   const vault = join(process.env.KB_TYPES_ROOT!, "example-vault");
-  const schema = readSchema(readFileSync(join(vault, ".obsidian/kb-schema.json"), "utf8"));
+  const schema = readSchema(readFileSync(join(vault, ".kb/schema.json"), "utf8"));
   const pages = Object.keys(schema.directories).flatMap((directory) =>
-    readdirSync(join(vault, directory)).filter((name) => name.endsWith(".md")).map((name) => ({
+    readdirSync(join(vault, directory)).filter((name) => name.endsWith(".md") && specFor(schema, `${directory}/${name}`)).map((name) => ({
       path: `${directory}/${name}`, text: readFileSync(join(vault, directory, name), "utf8"),
     })));
   assert.ok(pages.length >= 3);

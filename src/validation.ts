@@ -3,3 +3,5 @@ export { readSchema, readFrontmatter, specFor, pageName, validate, claimedAttrib
 export { checkRelations } from "./relations";
 export const apiVersion = 1;
 export const schemaVersion = 3;
+
+export { readInstanceConfig, schemaPath, instanceSchemaPath } from "./instance";

@@ -1,9 +1,10 @@
 # Schema format 3
 
-The vocabulary belongs to the vault, at `<vault config directory>/kb-schema.json`
-(normally `.obsidian/kb-schema.json`). Noteweave reads it; it does not ship or update
-the vocabulary. The [synthetic example](../example-vault/.obsidian/kb-schema.json)
-is a complete, minimal starting point for this plugin.
+The vocabulary belongs to the vault at `.kb/schema.json`, selected by
+`.kb/config.json`. Noteweave reads it and never replaces it during upgrades.
+The [synthetic example](../example-vault/.kb/schema.json) includes the metadata
+used by the CLI and generated rule tables. Legacy locations and migration are
+explained in [instances](instances.md).
 
 ## Top-level sections
 
@@ -17,10 +18,9 @@ is a complete, minimal starting point for this plugin.
 | `predicates` | Page relations with explicit inverse names and cardinalities. |
 | `enums` | Named mappings of allowed values to descriptions. |
 | `formats` | Regular-expression strings for `quantity`, `time` (a list), and `wikilink`. |
-| `kinds`, `scope_keys`, `units`, `jev` | Required object sections for vocabulary metadata. The example leaves unused metadata empty. |
+| `kinds`, `scope_keys`, `units`, `jev` | Required object sections for vocabulary metadata. The CLI requires the metadata used by rule-table rendering. |
 
-Extra metadata can describe terms for people or other tools. This example satisfies
-Noteweave, not every possible downstream knowledge-base validator.
+Extra metadata can describe terms for people or other tools. The example contains synthetic metadata, with no team vocabulary or evidence.
 
 ## Directory bindings
 
@@ -50,8 +50,8 @@ multiple targets. Special values cannot be mixed with actual targets.
 
 ## Evidence and claims
 
-The current evidence convention is `evidence/sources/<group>/<card>.md` or
-`evidence/records/<group>/<card>.md`. A source entry contains `id` and `resource`;
+The evidence convention is `<evidence-root>/sources/<group>/<card>.md` or
+`<evidence-root>/records/<group>/<card>.md`; `paths.evidence` defaults to `evidence`. A source entry contains `id` and `resource`;
 the latter is a relative Markdown path from the containing page. The target must
 have `type: source` or `type: record` for the plugin to present a navigable title.
 

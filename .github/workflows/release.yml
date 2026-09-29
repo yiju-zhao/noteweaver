@@ -18,10 +18,15 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run build
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install pyyaml
+      - run: npm run test:cli
       - name: Checksums
         working-directory: dist
-        run: sha256sum main.js manifest.json styles.css validation.cjs > SHA256SUMS
+        run: sha256sum main.js manifest.json styles.css validation.cjs runtime.zip > SHA256SUMS
       - name: Create draft release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" dist/main.js dist/manifest.json dist/styles.css dist/validation.cjs dist/SHA256SUMS THIRD_PARTY_NOTICES.md --draft --verify-tag --generate-notes
+        run: gh release create "$GITHUB_REF_NAME" dist/main.js dist/manifest.json dist/styles.css dist/validation.cjs dist/runtime.zip dist/SHA256SUMS THIRD_PARTY_NOTICES.md --draft --verify-tag --generate-notes

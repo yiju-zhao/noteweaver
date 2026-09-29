@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "name": "Example",
+  "vault_name": "example-vault",
+  "repository_root": "..",
+  "paths": {
+    "schema": ".kb/schema.json"
+  }
+}

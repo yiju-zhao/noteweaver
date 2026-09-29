@@ -1,0 +1,490 @@
+{
+  "version": 3,
+  "base_required": [
+    "type",
+    "title",
+    "description",
+    "generated"
+  ],
+  "special_values": [
+    "unknown",
+    "none"
+  ],
+  "formats": {
+    "quantity": "^[+-]?(\\d+(\\.\\d*)?|\\.\\d+)([eE][+-]?\\d+)?[KMBT]?$",
+    "time": [
+      "^\\d{4}(?:-(?:0[1-9]|1[0-2])(?:-(?:0[1-9]|[12]\\d|3[01]))?)?$",
+      "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}(:\\d{2}(\\.\\d+)?)?(Z|[+-]\\d{2}:\\d{2})$"
+    ],
+    "wikilink": "^\\[\\[([^\\[\\]]+)\\]\\]$"
+  },
+  "kinds": {
+    "entity": {
+      "directory": "entities",
+      "label": "entity",
+      "meaning": "Synthetic entity",
+      "not_for": "Other kinds",
+      "examples": "Example entity",
+      "jev": {
+        "what": "entity",
+        "not_for": "Other entries",
+        "examples": []
+      }
+    },
+    "concept": {
+      "directory": "concepts",
+      "label": "concept",
+      "meaning": "Synthetic concept",
+      "not_for": "Other kinds",
+      "examples": "Example concept",
+      "jev": {
+        "what": "concept",
+        "not_for": "Other entries",
+        "examples": []
+      }
+    }
+  },
+  "scope_keys": {},
+  "units": {
+    "layer": {
+      "dimension": "layer",
+      "factor": "1",
+      "meaning": "Synthetic layer"
+    },
+    "parameter": {
+      "dimension": "parameter",
+      "factor": "1",
+      "meaning": "Synthetic parameter"
+    },
+    "token/forward": {
+      "dimension": "token/forward",
+      "factor": "1",
+      "meaning": "Synthetic token/forward"
+    }
+  },
+  "jev": {
+    "predicate": {
+      "primitive": "choice",
+      "question": {
+        "en": "Select the applicable predicate",
+        "focus_en": "Use only the supplied evidence"
+      },
+      "escape_value": "none",
+      "order": [
+        "developed_by",
+        "part_of",
+        "instance_of",
+        "initialized_from",
+        "none"
+      ],
+      "extra_values": {
+        "none": {
+          "what": "No matching entry",
+          "not_for": "Other entries",
+          "examples": []
+        }
+      }
+    },
+    "attribute": {
+      "primitive": "choice",
+      "question": {
+        "en": "Select the applicable attribute",
+        "focus_en": "Use only the supplied evidence"
+      },
+      "escape_value": "none",
+      "order": [
+        "license",
+        "layers",
+        "params-total",
+        "released",
+        "founded",
+        "tpf",
+        "none"
+      ],
+      "extra_values": {
+        "none": {
+          "what": "No matching entry",
+          "not_for": "Other entries",
+          "examples": []
+        }
+      }
+    },
+    "kind": {
+      "primitive": "choice",
+      "question": {
+        "en": "Select the applicable kind",
+        "focus_en": "Use only the supplied evidence"
+      },
+      "escape_value": "none",
+      "order": [
+        "entity",
+        "concept",
+        "none"
+      ],
+      "extra_values": {
+        "none": {
+          "what": "No matching entry",
+          "not_for": "Other entries",
+          "examples": []
+        }
+      }
+    },
+    "entity-class": {
+      "primitive": "choice",
+      "question": {
+        "en": "Select the applicable entity-class",
+        "focus_en": "Use only the supplied evidence"
+      },
+      "escape_value": "none",
+      "order": [
+        "model",
+        "organization",
+        "person",
+        "none"
+      ],
+      "extra_values": {
+        "none": {
+          "what": "No matching entry",
+          "not_for": "Other entries",
+          "examples": []
+        }
+      }
+    }
+  },
+  "enums": {
+    "license": {
+      "mit": "MIT",
+      "apache-2.0": "Apache-2.0",
+      "proprietary": "Proprietary"
+    }
+  },
+  "attributes": {
+    "license": {
+      "label": "许可证",
+      "value": "enum",
+      "subject": [
+        {
+          "type": "entity",
+          "class": [
+            "model"
+          ]
+        }
+      ],
+      "object": [],
+      "place": "frontmatter",
+      "multi": false,
+      "enum": "license",
+      "meaning": "Synthetic license",
+      "not_for": "Other fields",
+      "statement": "{subject} license {value}",
+      "jev": {
+        "what": "license",
+        "not_for": "Other entries",
+        "examples": []
+      },
+      "unit": ""
+    },
+    "layers": {
+      "label": "层数",
+      "value": "quantity",
+      "subject": [
+        {
+          "type": "entity",
+          "class": [
+            "model"
+          ]
+        }
+      ],
+      "object": [],
+      "place": "frontmatter",
+      "multi": false,
+      "unit": "layer",
+      "meaning": "Synthetic layers",
+      "not_for": "Other fields",
+      "statement": "{subject} layers {value}",
+      "jev": {
+        "what": "layers",
+        "not_for": "Other entries",
+        "examples": []
+      }
+    },
+    "params-total": {
+      "label": "总参数量",
+      "value": "quantity",
+      "subject": [
+        {
+          "type": "entity",
+          "class": [
+            "model"
+          ]
+        }
+      ],
+      "object": [],
+      "place": "frontmatter",
+      "multi": false,
+      "unit": "parameter",
+      "meaning": "Synthetic params-total",
+      "not_for": "Other fields",
+      "statement": "{subject} params-total {value}",
+      "jev": {
+        "what": "params-total",
+        "not_for": "Other entries",
+        "examples": []
+      }
+    },
+    "released": {
+      "label": "发布时间",
+      "value": "time",
+      "subject": [
+        {
+          "type": "entity",
+          "class": [
+            "model"
+          ]
+        }
+      ],
+      "object": [],
+      "place": "frontmatter",
+      "multi": false,
+      "meaning": "Synthetic released",
+      "not_for": "Other fields",
+      "statement": "{subject} released {value}",
+      "jev": {
+        "what": "released",
+        "not_for": "Other entries",
+        "examples": []
+      },
+      "unit": ""
+    },
+    "founded": {
+      "label": "成立时间",
+      "value": "time",
+      "subject": [
+        {
+          "type": "entity",
+          "class": [
+            "organization"
+          ]
+        }
+      ],
+      "object": [],
+      "place": "frontmatter",
+      "multi": false,
+      "meaning": "Synthetic founded",
+      "not_for": "Other fields",
+      "statement": "{subject} founded {value}",
+      "jev": {
+        "what": "founded",
+        "not_for": "Other entries",
+        "examples": []
+      },
+      "unit": ""
+    },
+    "tpf": {
+      "label": "每次前向 token 数",
+      "value": "quantity",
+      "subject": [
+        {
+          "type": "entity",
+          "class": [
+            "model"
+          ]
+        }
+      ],
+      "object": [],
+      "place": "claim",
+      "multi": false,
+      "unit": "token/forward",
+      "meaning": "Synthetic tpf",
+      "not_for": "Other fields",
+      "statement": "{subject} tpf {value}",
+      "jev": {
+        "what": "tpf",
+        "not_for": "Other entries",
+        "examples": []
+      },
+      "place_reason": "Scoped measurement"
+    }
+  },
+  "predicates": {
+    "developed_by": {
+      "label": "开发方",
+      "value": "page",
+      "subject": [
+        {
+          "type": "entity",
+          "class": [
+            "model"
+          ]
+        }
+      ],
+      "object": [
+        {
+          "type": "entity",
+          "class": [
+            "organization",
+            "person"
+          ]
+        }
+      ],
+      "place": "frontmatter",
+      "multi": true,
+      "inverse": "开发了",
+      "inverse_key": "developed",
+      "inverse_multi": true,
+      "meaning": "Synthetic developed_by",
+      "not_for": "Other fields",
+      "statement": "{subject} developed_by {value}",
+      "jev": {
+        "what": "developed_by",
+        "not_for": "Other entries",
+        "examples": []
+      },
+      "unit": ""
+    },
+    "part_of": {
+      "label": "属于",
+      "value": "page",
+      "subject": [
+        {
+          "type": "entity"
+        }
+      ],
+      "object": [
+        {
+          "type": "entity",
+          "class": "SAME"
+        }
+      ],
+      "place": "frontmatter",
+      "multi": true,
+      "inverse": "组成",
+      "inverse_key": "parts",
+      "inverse_multi": true,
+      "meaning": "Synthetic part_of",
+      "not_for": "Other fields",
+      "statement": "{subject} part_of {value}",
+      "jev": {
+        "what": "part_of",
+        "not_for": "Other entries",
+        "examples": []
+      },
+      "unit": ""
+    },
+    "instance_of": {
+      "label": "是一种",
+      "value": "page",
+      "subject": [
+        {
+          "type": "entity"
+        }
+      ],
+      "object": [
+        {
+          "type": "concept"
+        }
+      ],
+      "place": "frontmatter",
+      "multi": true,
+      "inverse": "实例",
+      "inverse_key": "instances",
+      "inverse_multi": true,
+      "meaning": "Synthetic instance_of",
+      "not_for": "Other fields",
+      "statement": "{subject} instance_of {value}",
+      "jev": {
+        "what": "instance_of",
+        "not_for": "Other entries",
+        "examples": []
+      },
+      "unit": ""
+    },
+    "initialized_from": {
+      "label": "初始化自",
+      "value": "page",
+      "subject": [
+        {
+          "type": "entity",
+          "class": [
+            "model"
+          ]
+        }
+      ],
+      "object": [
+        {
+          "type": "entity",
+          "class": [
+            "model"
+          ]
+        }
+      ],
+      "place": "frontmatter",
+      "multi": false,
+      "inverse": "派生模型",
+      "inverse_key": "derived_models",
+      "inverse_multi": true,
+      "meaning": "Synthetic initialized_from",
+      "not_for": "Other fields",
+      "statement": "{subject} initialized_from {value}",
+      "jev": {
+        "what": "initialized_from",
+        "not_for": "Other entries",
+        "examples": []
+      },
+      "unit": ""
+    }
+  },
+  "directories": {
+    "bank/entities/models": {
+      "type": "entity",
+      "class": "model",
+      "icon": "brain",
+      "required": [
+        "developed_by",
+        "instance_of",
+        "initialized_from",
+        "released",
+        "license",
+        "params-total"
+      ],
+      "jev": {
+        "what": "model",
+        "not_for": "Other entries",
+        "examples": []
+      },
+      "meaning": "Synthetic model"
+    },
+    "bank/entities/organizations": {
+      "type": "entity",
+      "class": "organization",
+      "icon": "building-2",
+      "required": [
+        "founded"
+      ],
+      "jev": {
+        "what": "organization",
+        "not_for": "Other entries",
+        "examples": []
+      },
+      "meaning": "Synthetic organization"
+    },
+    "bank/entities/people": {
+      "type": "entity",
+      "class": "person",
+      "icon": "user",
+      "required": [],
+      "jev": {
+        "what": "person",
+        "not_for": "Other entries",
+        "examples": []
+      },
+      "meaning": "Synthetic person"
+    },
+    "bank/concepts": {
+      "type": "concept",
+      "class": null,
+      "icon": "lightbulb",
+      "required": []
+    }
+  }
+}

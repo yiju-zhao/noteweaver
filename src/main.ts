@@ -1,5 +1,6 @@
-// Noteweave: Obsidian glue for src/core.ts. Reads <vault>/.obsidian/kb-schema.json, which
-// defines this vault’s vocabulary. Private property APIs are isolated in property-adapter.ts.
+import { instanceSchemaPath, readInstanceConfig } from "./instance";
+// Noteweave: Obsidian glue for src/core.ts. The instance selects the vocabulary path.
+// Private property APIs are isolated in property-adapter.ts.
 import {
   App, debounce, Editor, EditorPosition, EditorSuggest, EditorSuggestContext, EditorSuggestTriggerInfo, getIcon,
   ItemView, MarkdownPostProcessorContext, Modal, moment, normalizePath, Notice, Plugin, PluginSettingTab, Setting,
@@ -19,6 +20,8 @@ export default class KbTypes extends Plugin {
   schema: core.KbSchema | null = null;
   schemaError = "";
   private schemaMtime = -1;
+  private schemaPath = "";
+  private evidenceRoot = "evidence";
   private statusEl!: HTMLElement;
   private styleEl: HTMLStyleElement | null = null;
   private created = new Map<string, number>();
@@ -82,7 +85,7 @@ export default class KbTypes extends Plugin {
         }
       }));
       await this.refresh();
-      if (!installReadonlyProperties(this, (file) => Boolean(this.specFor(file)))) {
+      if (!installReadonlyProperties(this, (file) => Boolean(this.specFor(file)), () => this.evidenceRoot)) {
         new Notice("Noteweave：当前 Obsidian 不支持只读嵌套展示，请在源码中查看 generated、sources、verified", 10000);
       }
       await this.syncRelations();
@@ -157,20 +160,33 @@ export default class KbTypes extends Plugin {
 
   // ---------------------------------------------------------------- schema and pages
   async loadSchema() {
-    const path = normalizePath(`${this.app.vault.configDir}/kb-schema.json`);
+    let path: string;
+    try {
+      const config = await this.app.vault.adapter.exists(".kb/config.json") ? readInstanceConfig(await this.app.vault.adapter.read(".kb/config.json")) : undefined;
+      this.evidenceRoot = config?.paths?.evidence ?? "evidence";
+      path = normalizePath(await instanceSchemaPath(
+        p => this.app.vault.adapter.read(p), p => this.app.vault.adapter.exists(p), this.app.vault.configDir));
+    } catch (error) {
+      this.schema = null;
+      this.schemaMtime = -1;
+      this.schemaError = (error as Error).message;
+      this.applyIcons();
+      return;
+    }
     const stat = await this.app.vault.adapter.stat(path);
     const mtime = stat?.mtime ?? 0;
-    if (mtime === this.schemaMtime) return;
+    if (path === this.schemaPath && mtime === this.schemaMtime) return;
+    this.schemaPath = path;
     this.schemaMtime = mtime;
     this.schema = null;
     if (!stat) {
-      this.schemaError = "找不到词表正本 kb-schema.json：请按插件 README 安装示例或配置词表";
+      this.schemaError = "找不到实例词表：请检查 .kb/config.json 的 schema 路径";
     } else {
       try {
         this.schema = core.readSchema(await this.app.vault.adapter.read(path));
         this.schemaError = "";
       } catch (e) {
-        this.schemaError = `kb-schema.json 读取失败：${(e as Error).message}`;
+        this.schemaError = `实例词表读取失败：${(e as Error).message}`;
       }
     }
     this.applyIcons();

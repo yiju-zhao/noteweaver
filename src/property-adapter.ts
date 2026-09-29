@@ -29,7 +29,7 @@ function redraw(plugin: Plugin) {
   }
 }
 
-export function installReadonlyProperties(plugin: Plugin, isBankPage: (file: TFile) => boolean): boolean {
+export function installReadonlyProperties(plugin: Plugin, isBankPage: (file: TFile) => boolean, evidenceRoot = () => "evidence"): boolean {
   const manager = (plugin.app as unknown as { metadataTypeManager?: Manager }).metadataTypeManager;
   if (!manager || typeof manager.getWidget !== "function" || !manager.registeredTypeWidgets) return false;
   const unknownWidget = manager.getWidget("unknown");
@@ -67,7 +67,7 @@ export function installReadonlyProperties(plugin: Plugin, isBankPage: (file: TFi
         const sources = key === "sources" && Array.isArray(data?.sources) ? data.sources : [];
         await Promise.all(sources.map(async (entry: unknown) => {
           if (!entry || typeof entry !== "object" || !("resource" in entry)) return;
-          const path = evidencePath(file.path, entry.resource);
+          const path = evidencePath(file.path, entry.resource, evidenceRoot());
           const target = path && plugin.app.vault.getAbstractFileByPath(path);
           if (!path || !(target instanceof TFile)) return;
           // Layout can become ready before a newly created card is indexed.
@@ -82,7 +82,7 @@ export function installReadonlyProperties(plugin: Plugin, isBankPage: (file: TFi
           const target = plugin.app.vault.getAbstractFileByPath(link.path);
           if (!(target instanceof TFile)) { new Notice("证据卡片已不存在，请检查来源路径"); return; }
           void plugin.app.workspace.getLeaf(event.button === 1 || Keymap.isModEvent(event) ? "tab" : false).openFile(target);
-        });
+        }, evidenceRoot());
       }).catch((error: Error) => { if (active && pending.get(el) === token) el.textContent = `读取失败：${error.message}`; });
       return { type: widget.type, focus: () => el.querySelector<HTMLElement>("summary, a")?.focus() };
     };
