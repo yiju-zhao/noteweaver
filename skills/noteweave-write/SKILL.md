@@ -1,10 +1,10 @@
 ---
-name: kb-write
-description: 收录材料、创建或修改 Noteweave 知识页，处理弃用、删除、合并、改名和人工核验。按目标知识库的 schema 与政策执行；只读查询使用 kb-query。
+name: noteweave-write
+description: 收录材料、创建或修改 Noteweave 知识页，处理弃用、删除、合并、改名和人工核验。按目标知识库的 schema 与政策执行；只读查询使用 noteweave-query。
 ---
 # 写入知识
 
-先运行同一运行包的查询上下文脚本：`node <本 skill 目录>/../kb-query/scripts/context.cjs`；可传 `--vault <目标 vault 绝对路径>`。它定位实例并检查该实例要求的 Obsidian 前置条件。失败时按提示处理；多个知识库时使用用户指定的目标，不猜默认库。
+先运行同一运行包的查询上下文脚本：`node <本 skill 目录>/../noteweave-query/scripts/context.cjs`；可传 `--vault <目标 vault 绝对路径>`。它定位实例并检查该实例要求的 Obsidian 前置条件。失败时按提示处理；多个知识库时使用用户指定的目标，不猜默认库。
 
 读取返回的配置：`paths` 相对 vault，`commands` 相对 repository。现行规则从 `paths.policies` 按需读取，词表以 `paths.schema` 为准。Obsidian 命令的首参数使用返回配置中的 `vault_name`，定位文件用 `path=<相对 vault 路径>`。配置和待审记录通过文件系统读取，知识通过实例规定的入口读取。
 
@@ -30,4 +30,4 @@ description: 收录材料、创建或修改 Noteweave 知识页，处理弃用�
 
 现有词表不能表达已授权内容时，按实例政策提出增补。确认后修改唯一 schema，并使用 `schema` 请求 刷新只读文档，完成实例要求的检查后一起提交；生成区不手改。
 
-调用 Noteweave 前读取 [Obsidian CLI 入口](../kb-query/references/obsidian-cli.md)。agent 使用原生 `eval` 传入 operation 和绝对 vault 路径，解析返回的 code 与 data；连接失败停止处理，不回退直接写盘。原生 `command id=...` 适合交互调用，提交检查必须等待结果。
+调用 Noteweave 前读取 [Obsidian CLI 入口](../noteweave-query/references/obsidian-cli.md)。agent 使用原生 `eval` 传入 operation 和绝对 vault 路径，解析返回的 code 与 data；连接失败停止处理，不回退直接写盘。原生 `command id=...` 适合交互调用，提交检查必须等待结果。

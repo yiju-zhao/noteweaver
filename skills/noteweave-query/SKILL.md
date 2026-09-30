@@ -1,6 +1,6 @@
 ---
-name: kb-query
-description: 查询 Noteweave 知识库，核对断言出处与可信度，并带页面和证据作答。适用于已有知识的查阅；收录或修改使用 kb-write，外部调研使用 kb-research。
+name: noteweave-query
+description: 查询 Noteweave 知识库，核对断言出处与可信度，并带页面和证据作答。适用于已有知识的查阅；收录或修改使用 noteweave-write，外部调研使用 noteweave-research。
 ---
 # 查询知识
 
@@ -12,7 +12,7 @@ description: 查询 Noteweave 知识库，核对断言出处与可信度，并�
 2. 只加载相关页面，必要时沿关系扩展。用Noteweave 的 `refs` 请求（name 为页面名） 区分 frontmatter、正文与 Claim 入链；正反关系由 schema 定义，不能把反向字段当作独立来源。
 3. 读取 `evidence.md` 与 `claims.md` 对应的引用规则。沿 sources 和脚注核对证据；Claim 有定位时只读对应文本节选。区分来源原文、推导和估计，并检查对象、版本、适用范围与生效时间。
 4. 按 `pages.md`、`claims.md` 解释 verified、draft、deprecated、撤回、冲突与历史值。未核验不等于有错；只有明确的人类核验记录才称人工核验。无快照时说明证据限制。
-5. 回答给出页面路径、证据和可信度；快照值带 generated 时间，Claim 带 ID、basis 与适用时间。没有答案时说明缺口；只有用户授权写入时才转交 kb-write。
+5. 回答给出页面路径、证据和可信度；快照值带 generated 时间，Claim 带 ID、basis 与适用时间。没有答案时说明缺口；只有用户授权写入时才转交 noteweave-write。
 
 引用范围是配置中的 bank 与 evidence。实例政策、待审材料和软件开发文档用于指导查询，不充当世界知识的证据。
 

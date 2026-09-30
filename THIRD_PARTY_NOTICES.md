@@ -18,4 +18,4 @@ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
 THIS SOFTWARE.
 ```
 
-The generic research workflow retains its upstream MIT attribution in `skills/kb-research/LICENSE` (adapted from NousResearch/Hermes skill methods).
+The generic research workflow retains its upstream MIT attribution in `skills/noteweave-research/LICENSE` (adapted from NousResearch/Hermes skill methods).

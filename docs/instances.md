@@ -54,7 +54,7 @@ to the same entries. Maintain generic skill source in this repository's `skills/
 and change instance policy in the vault. Tool-specific or third-party skills stay
 with their own owners; `research_skills` names the available integrations.
 
-`kb-query/scripts/context.cjs` resolves its bound installed instance (or explicit
+`noteweave-query/scripts/context.cjs` resolves its bound installed instance (or explicit
 `--vault`) and checks the caller's Obsidian requirement. It verifies the vault path,
 not only the display name. Installing the skill globally by linking the instance's
 entry retains that binding when invoked from a different project.
@@ -86,7 +86,7 @@ knowledge-bank actions in the command palette. `command` only accepts an ID and
 does not await its callback; retrieve the latest result with `commandResult(id)`.
 For agents, prefer a single `eval` calling `runAutomation(request)` and serializing
 the awaited result as JSON. Pass the absolute `vault` path for instance validation.
-See the [invocation reference](../skills/kb-query/references/obsidian-cli.md) for
+See the [invocation reference](../skills/noteweave-query/references/obsidian-cli.md) for
 requests, command IDs and result handling. Protocol version 1 uses `code` 0 for
 success, 1 for findings/conflicts and 2 for execution failure. A failed connection
 never switches to filesystem writes. No new Obsidian CLI subcommand is invented.
@@ -125,3 +125,14 @@ plugin list if needed, then run `obsidian vault=<name> plugin:enable id=noteweav
 Update any custom hotkeys or saved findings views to the new command/view prefix.
 Do not enable both identities. Existing schemas and knowledge content do not change.
 There is no compatibility alias for old command IDs.
+
+## Skill names in 0.10
+
+The bundled entry points are `noteweave-query`, `noteweave-write` and
+`noteweave-research`. Replace the previous kb-prefixed discovery links under
+`.agents/skills/`, `.claude/skills/` and any personal global skill directories;
+update their callers at the same time. Folder names and SKILL.md names match.
+Remove old discovery entries so agents see one copy of each workflow. The query
+context script still follows the installed instance's real path when invoked
+through a global symlink from another project. Local helpers named by
+`research_skills` remain owned by their instance.
