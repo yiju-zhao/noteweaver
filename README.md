@@ -11,10 +11,10 @@ properties. Each vault supplies its own `.kb/config.json`, schema and policies.
 
    ```sh
    gh auth login
-   gh release download 0.8.0 --repo CARI-DAAL/noteweave --dir noteweave-release \
+   gh release download 0.9.0 --repo CARI-DAAL/noteweave --dir noteweave-release \
      --pattern main.js --pattern manifest.json --pattern styles.css
    ```
-2. Put the three files in `<vault>/.obsidian/plugins/kb-types/`.
+2. Put the three files in `<vault>/.obsidian/plugins/noteweave/`.
 3. Add `.kb/config.json` and a compatible `.kb/schema.json`. To try the plugin, use the included
    [example vault](example-vault/) and its synthetic notes.
 4. Reload Obsidian and enable **Noteweave** under Community plugins. Set `actor`
@@ -52,8 +52,10 @@ Python; the offline runner requires Node.js 20+.
 
 ## Compatibility
 
-The display name and repository are **Noteweave**. The internal plugin ID remains
-`kb-types`, retaining existing installations, settings and relation checkpoints.
+The display name is **Noteweave**; the repository, plugin ID, installation directory,
+command prefix and UI namespace all use `noteweave`. Version 0.9 changes the old
+plugin ID; follow the [upgrade procedure](docs/instances.md#upgrade-the-plugin-identity)
+to retain settings and relation checkpoints. No old-ID runtime alias is registered.
 Legacy vaults without `.kb/config.json` still load `.obsidian/kb-schema.json`.
 Configured instances use `.kb/schema.json` by default; keeping both files is an error.
 Migration is explicit and never overwrites a vocabulary. See [instances and skills](docs/instances.md).
@@ -98,7 +100,7 @@ sharing supplies temporary read access without a personal token or stored secret
 ## Release
 
 Update the package, lockfile, manifest, and `versions.json`; run tests and build.
-Push a tag matching the manifest version, for example `0.8.0`. The release workflow
+Push a tag matching the manifest version, for example `0.9.0`. The release workflow
 builds and tests the tag and creates a draft GitHub Release with plugin files,
 the validation bundle, runtime.zip (offline runner and skills), and checksums. Review and publish that draft.
 
@@ -112,8 +114,8 @@ The bundled YAML dependency is covered by [third-party notices](THIRD_PARTY_NOTI
 Daily automation uses the official Obsidian CLI:
 
 ```sh
-obsidian vault=example-vault command id=kb-types:check-bank
-obsidian vault=example-vault eval 'code=(async()=>JSON.stringify(await app.plugins.plugins["kb-types"].runAutomation({operation:"check"})))()'
+obsidian vault=example-vault command id=noteweave:check
+obsidian vault=example-vault eval 'code=(async()=>JSON.stringify(await app.plugins.plugins["noteweave"].runAutomation({operation:"check"})))()'
 ```
 
 `command` triggers a palette action; `eval` accepts parameters and returns JSON.

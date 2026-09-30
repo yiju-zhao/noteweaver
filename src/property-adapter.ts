@@ -52,8 +52,8 @@ export function installReadonlyProperties(plugin: Plugin, isBankPage: (file: TFi
         nativeSources(plugin.app.metadataCache.getFileCache(file)?.frontmatter?.sources);
       if (!active || !ctx.key || !NESTED_KEYS.has(ctx.key) || native || !(file instanceof TFile) || !isBankPage(file)) {
         pending.delete(el);
-        if (el.classList.contains("kb-nested")) {
-          el.classList.remove("kb-nested");
+        if (el.classList.contains("noteweave-nested")) {
+          el.classList.remove("noteweave-nested");
           el.removeAttribute("aria-label");
         }
         return original.call(this, el, value, ctx);
@@ -62,7 +62,7 @@ export function installReadonlyProperties(plugin: Plugin, isBankPage: (file: TFi
       const token = {};
       pending.set(el, token);
       el.replaceChildren();
-      el.classList.add("kb-nested");
+      el.classList.add("noteweave-nested");
       el.textContent = "读取中…";
       // Source parsing uses failsafe YAML so the presentation also keeps lexical
       // quantities and timestamps. The native cache's parsed numbers are unused.

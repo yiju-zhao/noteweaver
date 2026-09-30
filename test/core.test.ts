@@ -8,7 +8,7 @@ import {
   readSchema, specFor, validate, valueChoices, type KbSchema, type PageInfo,
 } from "../src/core";
 
-const VAULT = join(process.env.KB_TYPES_ROOT!, "example-vault");
+const VAULT = join(process.env.NOTEWEAVE_ROOT!, "example-vault");
 const schemaText = readFileSync(join(VAULT, ".kb/schema.json"), "utf8");
 const schema: KbSchema = readSchema(schemaText);
 const models = schema.directories["bank/entities/models"];

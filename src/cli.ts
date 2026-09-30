@@ -32,13 +32,13 @@ export function parseArgs(args: string[]) {
 export function main(args: string[]) {
   if (args.includes("--help") || !args.length) {
     console.log(
-      "Noteweave offline runner: node cli.cjs [--root VAULT] --offline <check|index|schema|refs|lift|sources|info|review> [--json] [--base REV] [--check] [--dry-run]\nRequires --offline for CI and isolated fixtures. Daily use: obsidian vault=<name> command id=kb-types:check-bank; use Obsidian eval for parameters and JSON.",
+      "Noteweave offline runner: node cli.cjs [--root VAULT] --offline <check|index|schema|refs|lift|sources|info|review> [--json] [--base REV] [--check] [--dry-run]\nRequires --offline for CI and isolated fixtures. Daily use: obsidian vault=<name> command id=noteweave:check; use Obsidian eval for parameters and JSON.",
     );
     return 0;
   }
   try {
     const { root, offline, json, request } = parseArgs(args);
-    if (!offline) throw new Error("daily operations use Obsidian CLI: obsidian vault=<name> command id=kb-types:check-bank; this runner requires --offline for CI or isolated fixtures");
+    if (!offline) throw new Error("daily operations use Obsidian CLI: obsidian vault=<name> command id=noteweave:check; this runner requires --offline for CI or isolated fixtures");
     const instance = root ? loadInstance(root) : discover(process.cwd());
     const result = runOffline(instance, request);
     if (result.code === 2)

@@ -68,8 +68,8 @@ relative `..` segments and missing aliases are rejected. Backlinks are computed
 by Obsidian, never persisted into immutable evidence cards.
 
 Instances without `formats.sources` retain compatibility with legacy
-`{id, resource}` entries. After setting the format, preview `obsidian vault=<name> command id=kb-types:sources-preview`
-and run `obsidian vault=<name> command id=kb-types:sources` to migrate through Obsidian. Migration validates the whole
+`{id, resource}` entries. After setting the format, preview `obsidian vault=<name> command id=noteweave:sources-preview`
+and run `obsidian vault=<name> command id=noteweave:sources` to migrate through Obsidian. Migration validates the whole
 bank before writing, changes only `sources` and `generated`, rejects extra source
 metadata, and is idempotent. Update the instance's change log afterwards.
 As with other multi-file operations, concurrent edits stop remaining writes;

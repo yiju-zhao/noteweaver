@@ -80,7 +80,7 @@ this instance policy is a human decision.
 
 ## Automation and CI
 
-Daily operations use native `obsidian vault=<name> command id=kb-types:<id>`
+Daily operations use native `obsidian vault=<name> command id=noteweave:<id>`
 or `obsidian vault=<name> eval code=<JavaScript>`. The plugin registers the
 knowledge-bank actions in the command palette. `command` only accepts an ID and
 does not await its callback; retrieve the latest result with `commandResult(id)`.
@@ -111,3 +111,17 @@ must call the offline runner or the TypeScript bundle instead. Instance installe
 consumer test harnesses may use Python independently of the Noteweave runtime.
 
 Version 0.8 removes the daily CLI wrapper. Remove `commands.kb` and local `kb` shims, update skills and hooks to native Obsidian calls, and keep a separate explicit offline check for CI. Hooks must parse the JSON result and propagate its code; Obsidian process success alone is insufficient.
+
+## Upgrade the plugin identity
+
+Version 0.9 uses `noteweave` as the sole plugin ID. To upgrade an installation
+from the previous ID, keep the vault open and disable the old plugin with
+`obsidian vault=<name> plugin:disable id=kb-types`. Move its entire plugin directory
+from `.obsidian/plugins/kb-types/` to `.obsidian/plugins/noteweave/`, preserving
+`data.json` byte for byte. If both directories already contain settings, compare
+them before proceeding; never overwrite an independent installation's settings.
+Install the verified 0.9 release files in the new directory, refresh Obsidian's
+plugin list if needed, then run `obsidian vault=<name> plugin:enable id=noteweave`.
+Update any custom hotkeys or saved findings views to the new command/view prefix.
+Do not enable both identities. Existing schemas and knowledge content do not change.
+There is no compatibility alias for old command IDs.

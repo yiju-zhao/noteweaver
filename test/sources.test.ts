@@ -28,7 +28,7 @@ test("native lists keep the native widget, including empty and invalid editable 
 });
 
 test("schema declares the source format explicitly and rejects unknown formats", () => {
-  const raw = JSON.parse(readFileSync(join(process.env.KB_TYPES_ROOT!, "example-vault/.kb/schema.json"), "utf8"));
+  const raw = JSON.parse(readFileSync(join(process.env.NOTEWEAVE_ROOT!, "example-vault/.kb/schema.json"), "utf8"));
   raw.formats.sources = "wikilink";
   assert.equal(readSchema(JSON.stringify(raw)).formats.sources, "wikilink");
   raw.formats.sources = "unknown-format";

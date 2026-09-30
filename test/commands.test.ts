@@ -6,21 +6,21 @@ const ok: Result = { apiVersion: 1, code: 0, data: { errors: 0 }, changes: [] };
 test("native command result waits for asynchronous completion", async () => {
   const commands = new CommandResults();
   let finish!: (r: Result) => void;
-  commands.start("check-bank", () => new Promise(resolve => { finish = resolve; }));
+  commands.start("check", () => new Promise(resolve => { finish = resolve; }));
   let completed = false;
-  const result = commands.result("check-bank").then(r => { completed = true; return r; });
+  const result = commands.result("check").then(r => { completed = true; return r; });
   await Promise.resolve();
   assert.equal(completed, false);
   finish({ ...ok, code: 1, data: { errors: 2 } });
-  assert.deepEqual(await result, { ...ok, code: 1, data: { errors: 2 }, commandId: "check-bank" });
+  assert.deepEqual(await result, { ...ok, code: 1, data: { errors: 2 }, commandId: "check" });
 });
 test("failures and missing or mismatched commands cannot look like previous success", async () => {
   const commands = new CommandResults();
   assert.equal((await commands.result()).code, 2);
   await commands.start("index", async () => ok);
-  assert.equal((await commands.result("check-bank")).code, 2);
-  commands.start("check-bank", async () => { throw Error("connection lost"); });
-  const result = await commands.result("check-bank");
+  assert.equal((await commands.result("check")).code, 2);
+  commands.start("check", async () => { throw Error("connection lost"); });
+  const result = await commands.result("check");
   assert.equal(result.code, 2);
   assert.equal(result.data.error, "connection lost");
 });

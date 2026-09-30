@@ -14,12 +14,12 @@ import * as core from "./core";
 import { applyRelationPlan, checkRelations, planRelations, readRelationState, type RelationIssue, type RelationState } from "./relations";
 import { installReadonlyProperties } from "./property-adapter";
 
-const VIEW = "kb-types-findings";
+const VIEW = "noteweave-findings";
 
 interface Settings { actor: string }
 const DEFAULTS: Settings = { actor: "" };
 
-export default class KbTypes extends Plugin {
+export default class Noteweave extends Plugin {
   readonly automationVersion = 1;
   private bank?: ObsidianBank;
   private commandResults = new CommandResults();
@@ -60,10 +60,10 @@ export default class KbTypes extends Plugin {
     const saved = await this.loadData();
     this.settings = { actor: typeof saved?.actor === "string" ? saved.actor : DEFAULTS.actor };
     this.relationState = readRelationState(saved?.relations);
-    this.addSettingTab(new KbTypesSettings(this.app, this));
+    this.addSettingTab(new NoteweaveSettings(this.app, this));
     this.registerView(VIEW, (leaf) => new FindingsView(leaf, this));
     this.statusEl = this.addStatusBarItem();
-    this.statusEl.addClass("kb-types-status", "mod-clickable");
+    this.statusEl.addClass("noteweave-status", "mod-clickable");
     this.registerDomEvent(this.statusEl, "click", () => void this.openView());
     this.registerMarkdownPostProcessor((el, ctx) => this.renderClaims(el, ctx));
     this.registerEditorSuggest(new FrontmatterSuggest(this));
@@ -83,7 +83,7 @@ export default class KbTypes extends Plugin {
       // Missing active page is an execution failure, also retained in commandResult.
       this.runBankCommand("refs", { operation: "refs", name: file?.basename });
     } });
-    this.addCommand({ id: "check-vault", name: "检查全库 frontmatter", callback: () => void this.checkVault() });
+    this.addCommand({ id: "check-frontmatter", name: "检查全库 frontmatter", callback: () => void this.checkVault() });
     this.addCommand({ id: "show-findings", name: "打开检查面板", callback: () => void this.openView() });
     this.addCommand({ id: "sync-relations", name: "同步全库双向关系", callback: () => void this.syncRelations(true) });
     this.addCommand({ id: "reload-schema", name: "重新读取 kb-schema.json",
@@ -311,7 +311,7 @@ export default class KbTypes extends Plugin {
   private renderStatus() {
     const el = this.statusEl;
     el.empty();
-    el.removeClass("kb-types-error", "kb-types-warning");
+    el.removeClass("noteweave-error", "noteweave-warning");
     if (!this.schema) {
       el.setText("Noteweave: 无 schema");
       el.setAttr("aria-label", this.schemaError);
@@ -319,7 +319,7 @@ export default class KbTypes extends Plugin {
     }
     if (this.relationIssues.length) {
       el.setText(`Noteweave: ${this.relationIssues.length} 项关系待处理`);
-      el.addClass("kb-types-error");
+      el.addClass("noteweave-error");
       el.setAttr("aria-label", "双向关系未同步，点开看详情");
       return;
     }
@@ -327,8 +327,8 @@ export default class KbTypes extends Plugin {
     const errors = this.current.findings.filter((f) => f.severity === "error").length;
     const warnings = this.current.findings.length - errors;
     el.setText(errors || warnings ? `Noteweave: ${errors} 错误 · ${warnings} 警告` : "Noteweave ✓");
-    if (errors) el.addClass("kb-types-error");
-    else if (warnings) el.addClass("kb-types-warning");
+    if (errors) el.addClass("noteweave-error");
+    else if (warnings) el.addClass("noteweave-warning");
     el.setAttr("aria-label", "frontmatter 检查（点开看详情）");
   }
 
@@ -350,7 +350,7 @@ export default class KbTypes extends Plugin {
     this.styleEl?.remove();
     this.styleEl = null;
     if (!this.schema) return;
-    this.styleEl = document.head.createEl("style", { attr: { id: "kb-types-icons" } });
+    this.styleEl = document.head.createEl("style", { attr: { id: "noteweave-icons" } });
     this.styleEl.textContent = core.iconCss(this.schema, (id) => getIcon(id)?.outerHTML ?? null);
   }
 
@@ -362,15 +362,15 @@ export default class KbTypes extends Plugin {
     const block = core.claimsBlock(info.text);
     if (!block || block.error || block.fenceLine !== info.lineStart) return;
     const { rows, error } = core.claimRows(this.schema, block.yaml);
-    const box = createDiv({ cls: "kb-claims" });
-    if (error) box.createDiv({ cls: "kb-claims-error", text: error });
+    const box = createDiv({ cls: "noteweave-claims" });
+    if (error) box.createDiv({ cls: "noteweave-claims-error", text: error });
     if (rows.length) {
       const table = box.createEl("table");
       const head = table.createEl("thead").createEl("tr");
       for (const h of ["属性", "值", "适用范围", "生效", "取得方式", "证据", "核验", "状态"]) head.createEl("th", { text: h });
       const body = table.createEl("tbody");
       for (const r of rows) {
-        const tr = body.createEl("tr", { cls: r.state.startsWith("已撤回") ? "kb-claim-retracted" : "" });
+        const tr = body.createEl("tr", { cls: r.state.startsWith("已撤回") ? "noteweave-claim-retracted" : "" });
         tr.setAttr("title", r.id);
         const attr = tr.createEl("td");
         if (r.label) attr.createSpan({ text: `${r.label} ` });
@@ -378,7 +378,7 @@ export default class KbTypes extends Plugin {
         for (const v of [r.value, r.scope, r.valid, r.basis, r.evidence, r.verified, r.state]) tr.createEl("td", { text: v });
       }
     }
-    const details = createEl("details", { cls: "kb-claims-yaml" });
+    const details = createEl("details", { cls: "noteweave-claims-yaml" });
     details.createEl("summary", { text: "yaml 原文" });
     pre.replaceWith(box);
     box.appendChild(details);
@@ -445,7 +445,7 @@ class TextModal extends Modal {
 /** Source-mode suggestions for enum and relation keys inside the frontmatter. */
 class FrontmatterSuggest extends EditorSuggest<string> {
   private choices: string[] = [];
-  constructor(private plugin: KbTypes) { super(plugin.app); }
+  constructor(private plugin: Noteweave) { super(plugin.app); }
 
   onTrigger(cursor: EditorPosition, editor: Editor, file: TFile | null): EditorSuggestTriggerInfo | null {
     const spec = file && this.plugin.specFor(file);
@@ -487,7 +487,7 @@ class FrontmatterSuggest extends EditorSuggest<string> {
 }
 
 class FindingsView extends ItemView {
-  constructor(leaf: WorkspaceLeaf, private plugin: KbTypes) { super(leaf); }
+  constructor(leaf: WorkspaceLeaf, private plugin: Noteweave) { super(leaf); }
   getViewType() { return VIEW; }
   getDisplayText() { return "Noteweave 检查"; }
   getIcon() { return "shield-check"; }
@@ -496,27 +496,27 @@ class FindingsView extends ItemView {
   render() {
     const el = this.contentEl;
     el.empty();
-    el.addClass("kb-types-view");
+    el.addClass("noteweave-view");
     const p = this.plugin;
-    if (p.schemaError) el.createDiv({ cls: "kb-types-error", text: p.schemaError });
+    if (p.schemaError) el.createDiv({ cls: "noteweave-error", text: p.schemaError });
     if (p.relationIssues.length) {
       el.createEl("h4", { text: "关系同步" });
       for (const issue of p.relationIssues) {
-        const link = el.createDiv({ cls: "kb-types-file" }).createEl("a", { text: issue.path });
+        const link = el.createDiv({ cls: "noteweave-file" }).createEl("a", { text: issue.path });
         link.onclick = () => void this.app.workspace.openLinkText(issue.path, "", false);
         this.list(el, [issue]);
       }
     }
     el.createEl("h4", { text: "当前页" });
-    if (!p.current) el.createDiv({ cls: "kb-types-muted", text: "当前页不在 schema 绑定的目录里" });
+    if (!p.current) el.createDiv({ cls: "noteweave-muted", text: "当前页不在 schema 绑定的目录里" });
     else this.list(el, p.current.findings);
-    const bar = el.createDiv({ cls: "kb-types-bar" });
+    const bar = el.createDiv({ cls: "noteweave-bar" });
     bar.createEl("h4", { text: "全库" });
     bar.createEl("button", { text: p.all ? "重新检查" : "检查全库" }).onclick = () => void p.checkVault();
     if (p.all) {
-      el.createDiv({ cls: "kb-types-muted", text: `${p.all.size} 页有问题` });
+      el.createDiv({ cls: "noteweave-muted", text: `${p.all.size} 页有问题` });
       for (const [path, findings] of [...p.all].sort(([a], [b]) => a.localeCompare(b))) {
-        const link = el.createDiv({ cls: "kb-types-file" }).createEl("a", { text: path });
+        const link = el.createDiv({ cls: "noteweave-file" }).createEl("a", { text: path });
         link.onclick = () => void this.app.workspace.openLinkText(path, "", false);
         this.list(el, findings);
       }
@@ -525,20 +525,20 @@ class FindingsView extends ItemView {
 
   private list(el: HTMLElement, findings: core.Finding[]) {
     if (!findings.length) {
-      el.createDiv({ cls: "kb-types-muted", text: "frontmatter 没有问题" });
+      el.createDiv({ cls: "noteweave-muted", text: "frontmatter 没有问题" });
       return;
     }
     const ul = el.createEl("ul");
     for (const f of findings) {
-      const li = ul.createEl("li", { cls: f.severity === "error" ? "kb-types-error" : "kb-types-warning" });
+      const li = ul.createEl("li", { cls: f.severity === "error" ? "noteweave-error" : "noteweave-warning" });
       li.createEl("code", { text: f.code });
       li.appendText(` ${f.message}`);
     }
   }
 }
 
-class KbTypesSettings extends PluginSettingTab {
-  constructor(app: App, private plugin: KbTypes) { super(app, plugin); }
+class NoteweaveSettings extends PluginSettingTab {
+  constructor(app: App, private plugin: Noteweave) { super(app, plugin); }
   display() {
     this.containerEl.empty();
     new Setting(this.containerEl).setName("actor")

@@ -1,4 +1,4 @@
-// Pure logic of the kb-types plugin: no Obsidian imports, so node can test it.
+// Pure logic of the noteweave plugin: no Obsidian imports, so node can test it.
 // Vocabulary comes from the v3 source of truth, kb-schema.json;
 // this module applies the vocabulary without an Obsidian dependency.
 import { isMap, isScalar, parse, parseDocument } from "yaml";

@@ -1,7 +1,7 @@
 {
-  "id": "kb-types",
+  "id": "noteweave",
   "name": "Noteweave",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "minAppVersion": "1.12.7",
   "description": "Schema-driven page types, validation, bidirectional relations and read-only evidence properties.",
   "author": "CARI-DAAL",
