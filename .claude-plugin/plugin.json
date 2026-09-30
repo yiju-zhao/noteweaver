@@ -3,7 +3,7 @@
   "version": "0.12.0",
   "description": "Manage and generate schema-driven knowledge banks on native Obsidian.",
   "author": {
-    "name": "CARI-DAAL"
+    "name": "yiju-zhao"
   },
   "skills": "./skills/"
 }

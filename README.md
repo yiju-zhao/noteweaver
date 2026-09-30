@@ -7,19 +7,21 @@ adapter runs the same rules in CI. Each vault owns its vocabulary and policies.
 
 One release contains an **Obsidian plugin** and an **Agent plugin** with nine
 skills: query, write, research, initialization, arXiv discovery, browser research,
-Obsidian Bases, archify and explainer. This private repository is the source of
-all of them; consuming knowledge banks keep a release lock and replaceable
-installations.
+Obsidian Bases, archify and explainer. Knowledge banks keep a release lock and
+replaceable tool installations.
 
 ## Install and initialize
 
-Download a release from [CARI-DAAL/noteweaver](https://github.com/CARI-DAAL/noteweaver/releases).
-Verify its `SHA256SUMS`. Put its `tools.lock.json` in `<vault>/.noteweaver/` and run
-the verified installer:
+Install from a published [release](https://github.com/yiju-zhao/noteweaver/releases),
+or build the release assets with the development commands below.
+Place the release assets in `./release`, verify `SHA256SUMS`, and put
+`tools.lock.json` in `<vault>/.noteweaver/`. Run the verified installer:
 
 ```sh
-python3 installer.py install --metadata /absolute/vault/.noteweaver --assets ./release --bootstrap
+python3 ./release/installer.py install --metadata /absolute/vault/.noteweaver --assets ./release --bootstrap
 ```
+
+For a local build, use `./dist` in place of `./release`.
 
 `--bootstrap` permits installing tools before an instance descriptor exists; it
 does not create knowledge content. Open the vault in Obsidian, enable Noteweaver,
@@ -62,6 +64,7 @@ npm run build
 npm run test:cli
 python3 -m unittest discover -s test -p 'test_*.py'
 python3 -m unittest discover -s skills/noteweaver-arxiv/tests
+node scripts/release-lock.mjs
 ```
 
 Development and the offline runner require Node.js 20+; the browser helper requires
@@ -73,4 +76,4 @@ without the desktop automation adapter.
 The build creates `runtime.zip` (programs), `agent-plugin.zip` (skills and tools),
 `installer.py`, the Obsidian assets and `SHA256SUMS`. CI tests the same release
 artifacts. A tagged release also includes a source-pinned `tools.lock.json`.
-Upstream attributions are in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+Third-party attributions are in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

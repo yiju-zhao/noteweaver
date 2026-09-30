@@ -21,7 +21,7 @@ def digest(data):
 
 def read_lock(path):
     lock = json.loads(path.read_text())
-    if (lock.get('repository') != 'CARI-DAAL/noteweaver'
+    if (lock.get('repository') != 'yiju-zhao/noteweaver'
             or not re.fullmatch(r'\d+\.\d+\.\d+', lock.get('version', ''))
             or set(lock.get('assets', {})) != ASSETS
             or any(not re.fullmatch(r'[a-f0-9]{64}', sha) for sha in lock['assets'].values())

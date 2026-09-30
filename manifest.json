@@ -4,7 +4,7 @@
   "version": "0.12.0",
   "minAppVersion": "1.12.7",
   "description": "Schema-driven page types, validation, bidirectional relations and read-only evidence properties.",
-  "author": "CARI-DAAL",
+  "author": "yiju-zhao",
   "isDesktopOnly": false,
-  "authorUrl": "https://github.com/CARI-DAAL"
+  "authorUrl": "https://github.com/yiju-zhao"
 }

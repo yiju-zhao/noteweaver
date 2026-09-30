@@ -30,4 +30,4 @@ The generic research workflow retains its upstream MIT attribution in `skills/no
 | archify | tt-a1i/archify v2.16.0 | MIT; skills/archify/LICENSE; runtime archive SHA-256 pinned in scripts/package_runtime.mjs |
 | explainer | yiju-zhao/agent-skills 2a02e94 | No upstream license declared; authorship retained, no relicensing; skills/explainer/UPSTREAM.md |
 
-The skills and their helper scripts were previously maintained by the private knowledge-bank repository. Runtime dependencies keep their own notices. No browser profile, authentication state or knowledge-bank content is bundled.
+Runtime dependencies keep their own notices. No browser profile, authentication state or knowledge-bank content is bundled.

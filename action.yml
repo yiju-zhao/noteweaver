@@ -1,5 +1,5 @@
 name: Build Noteweaver
-description: Build pinned Noteweaver assets for another private CARI-DAAL repository.
+description: Build pinned Noteweaver release assets for a consuming repository.
 outputs:
   assets:
     description: Absolute directory containing the compiled release assets.

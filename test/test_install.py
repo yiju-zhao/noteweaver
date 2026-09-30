@@ -21,7 +21,7 @@ class InstallationTests(unittest.TestCase):
         self.destination = self.vault / '.obsidian/plugins/noteweaver'; self.destination.mkdir(parents=True)
         self.state = b'{"actor":"human:demo","relations":{"edges":[]}}'
         (self.destination / 'data.json').write_bytes(self.state)
-        self.lock = {'repository':'CARI-DAAL/noteweaver', 'version':'0.12.0', 'schema_version':3,
+        self.lock = {'repository':'yiju-zhao/noteweaver', 'version':'0.12.0', 'schema_version':3,
                      'source_commit':'a'*40, 'assets':{p:installer.digest((ROOT/'dist'/p).read_bytes()) for p in installer.ASSETS}}
         self.plugin = self.root / '.agents/plugins/noteweaver'
     def install(self, **kw):

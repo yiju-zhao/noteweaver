@@ -20,7 +20,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/CARI-DAAL/noteweaver.git"
+    "url": "https://github.com/yiju-zhao/noteweaver.git"
   },
   "engines": {
     "node": ">=20"
