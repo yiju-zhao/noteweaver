@@ -1,129 +1,76 @@
-# Noteweave
+# Noteweaver
 
-An Obsidian plugin for schema-driven knowledge bases: directory-bound page types,
-frontmatter checks and templates, bidirectional relations, and read-only evidence
-properties. Each vault supplies its own `.kb/config.json`, schema and policies.
+Noteweaver manages and generates schema-driven knowledge banks on native Obsidian.
+A shared TypeScript kernel validates pages, claims, evidence and relations and
+plans changes. The Obsidian adapter applies daily edits; an explicit offline
+adapter runs the same rules in CI. Each vault owns its vocabulary and policies.
 
-## Install
+One release contains an **Obsidian plugin** and an **Agent plugin** with nine
+skills: query, write, research, initialization, arXiv discovery, browser research,
+Obsidian Bases, archify and explainer. This private repository is the source of
+all of them; consuming knowledge banks keep a release lock and replaceable
+installations.
 
-1. With an account that can access this private repository, download the plugin
-   from a [release](https://github.com/CARI-DAAL/noteweave/releases). GitHub CLI users can run:
+## Install and initialize
 
-   ```sh
-   gh auth login
-   gh release download 0.10.0 --repo CARI-DAAL/noteweave --dir noteweave-release \
-     --pattern main.js --pattern manifest.json --pattern styles.css
-   ```
-2. Put the three files in `<vault>/.obsidian/plugins/noteweave/`.
-3. Add `.kb/config.json` and a compatible `.kb/schema.json`. To try the plugin, use the included
-   [example vault](example-vault/) and its synthetic notes.
-4. Reload Obsidian and enable **Noteweave** under Community plugins. Set `actor`
-   in the plugin settings, for example `human:demo`.
+Download a release from [CARI-DAAL/noteweaver](https://github.com/CARI-DAAL/noteweaver/releases).
+Verify its `SHA256SUMS`. Put its `tools.lock.json` in `<vault>/.noteweaver/` and run
+the verified installer:
 
-Updates replace those three release files. Keep `data.json`: it holds your actor
-and the relation synchronization checkpoint. Your schema lives outside the plugin
-directory and is not replaced by an update.
+```sh
+python3 installer.py install --metadata /absolute/vault/.noteweaver --assets ./release --bootstrap
+```
 
-The plugin is distributed through GitHub Releases; it has not been submitted to
-the Obsidian Community directory. Node.js is only needed for development and the
-optional validation bundle, not for installing the plugin in Obsidian.
+`--bootstrap` permits installing tools before an instance descriptor exists; it
+does not create knowledge content. Open the vault in Obsidian, enable Noteweaver,
+and use the bundled `noteweaver-init` skill to preview and apply initialization.
+Existing instances omit `--bootstrap`. The installer preserves the plugin's
+`data.json`, schema, policies and knowledge. A lock pins every release asset by
+SHA-256 and records the source commit.
+
+The Agent package installs at `<repository>/.agents/plugins/noteweaver/`. Register
+that folder in the host's local marketplace. It includes portable `plugin.json`,
+Codex and Claude compatibility manifests, compiled helpers and the pinned archify
+runtime. For hosts without plugins, `--mode skills` additionally installs the
+same skills into `.agents/skills/`; enable one discovery mode per host.
+See [installation and migration](docs/instances.md) for marketplace setup,
+dependencies, instance binding, explicit migration and rollback.
 
 ## Use
 
-- Entity grouping folders have a collection icon; class folders and pages retain their schema icons.
-- Create an empty note in a schema-bound directory to receive its frontmatter
-  template. Existing content is preserved.
-- Use **按 schema 设置属性值** to choose a vocabulary property and its allowed values.
-- Use **检查全库 frontmatter** to inspect findings, or click the status bar to see
-  findings for the current note.
-- Edit either side of a declared relation. The plugin synchronizes its inverse,
-  including removals, renames, and deletions. Conflicting relations pause writes
-  and appear in the findings panel. **同步全库双向关系** runs reconciliation explicitly.
-- `sources` uses native Properties lists when its entries are wikilinks. The link
-  alias carries the page-local citation ID; the full path identifies a source or
-  record card. `generated`, `verified`, and legacy source objects remain read-only
-  nested displays. Edit precise YAML in source mode to retain its lexical values.
-- A YAML block under `## 断言` is rendered as a claims table in reading view.
+```sh
+obsidian vault=my-vault command id=noteweaver:check
+obsidian vault=my-vault eval 'code=(async()=>JSON.stringify(await app.plugins.plugins["noteweaver"].runAutomation({operation:"check",vault:"/absolute/vault"})))()'
+node /absolute/vault/.noteweaver/runtime/cli/cli.cjs --root /absolute/vault --offline check --json
+```
 
-The current interface uses Chinese labels. This release targets knowledge bases
-using the documented schema and evidence conventions; see [schema format](docs/schema.md).
-It does not bundle a team's vocabulary or content. The desktop plugin runs without
-Python; the offline runner requires Node.js 20+.
+Agents await `runAutomation` and inspect its JSON `code`; command process success
+alone does not establish success. See the [automation reference](skills/noteweaver-query/references/obsidian-cli.md).
+Failed desktop connections never switch to filesystem writes.
 
-## Compatibility
+Native Properties support directory-bound types, inverse relations and evidence
+links. Claims render in reading view. Schemas are format version 3; see
+[schema format](docs/schema.md). The starter template defines a minimal vocabulary
+for seven kinds. A structure check does not verify the truth of cited facts.
 
-The display name is **Noteweave**; the repository, plugin ID, installation directory,
-command prefix and UI namespace all use `noteweave`. Version 0.9 changes the old
-plugin ID; follow the [upgrade procedure](docs/instances.md#upgrade-the-plugin-identity)
-to retain settings and relation checkpoints. No old-ID runtime alias is registered.
-Legacy vaults without `.kb/config.json` still load `.obsidian/kb-schema.json`.
-Configured instances use `.kb/schema.json` by default; keeping both files is an error.
-Migration is explicit and never overwrites a vocabulary. See [instances and skills](docs/instances.md).
-
-- Schema format: **3**. Unsupported schema versions stop schema-dependent work.
-- Obsidian minimum: **1.12.7**. Desktop behavior was tested on **1.13.7**.
-- Read-only Properties display uses an isolated private Obsidian API. If unavailable,
-  the plugin shows a notice and leaves the native display available.
-- Mobile is not independently verified in this release.
-- Frontmatter validation is not an evidence audit or an implementation of every
-  rule a knowledge base may require. Keep your own content checks where needed.
-
-## Develop
-
-Requires Node.js 20+ and npm. Tests and packaging use Node.js.
+## Develop and release
 
 ```sh
 npm ci
 npm test
 npm run build
 npm run test:cli
+python3 -m unittest discover -s test -p 'test_*.py'
+python3 -m unittest discover -s skills/noteweaver-arxiv/tests
 ```
 
-Build output goes to `dist/`; building never writes to a vault. Copy the three
-plugin files to your development vault to load them. The tests use only the
-synthetic example schema and fixtures in this repository.
+Development and the offline runner require Node.js 20+; the browser helper requires
+Node.js 24+. Building downloads a hash-pinned archify archive and requires unzip.
+Python 3.9+ runs the installer and arXiv helper. Obsidian minimum is 1.12.7; full
+automation is a desktop feature. The regular property display remains available
+without the desktop automation adapter.
 
-`dist/validation.cjs` is a bundled, read-only Node.js API for downstream checks,
-with no npm install required. It exports `apiVersion` (1), `schemaVersion` (3),
-`readSchema`, `readFrontmatter`, `specFor`, `pageName`, `validate`,
-`claimedAttributes`, and `checkRelations`. It never loads Obsidian or writes files.
-Downstream consumers should pin the release and verify its checksum before use.
-
-## Private CI consumers
-
-Other private CARI-DAAL repositories can use the composite action in this
-repository, pinned to a full commit SHA. The caller provides Node.js 20+; the
-`assets` output points to the built release files. The caller should verify those
-files against its own pinned release checksums. GitHub’s organization-only action
-sharing supplies temporary read access without a personal token or stored secret.
-
-## Release
-
-Update the package, lockfile, manifest, and `versions.json`; run tests and build.
-Push a tag matching the manifest version, for example `0.10.0`. The release workflow
-builds and tests the tag and creates a draft GitHub Release with plugin files,
-the validation bundle, runtime.zip (offline runner and skills), and checksums. Review and publish that draft.
-
-## License
-
-This is a private CARI-DAAL repository. An open-source license has not been selected.
-The bundled YAML dependency is covered by [third-party notices](THIRD_PARTY_NOTICES.md).
-
-## Obsidian CLI and agent skills
-
-Daily automation uses the official Obsidian CLI:
-
-```sh
-obsidian vault=example-vault command id=noteweave:check
-obsidian vault=example-vault eval 'code=(async()=>JSON.stringify(await app.plugins.plugins["noteweave"].runAutomation({operation:"check"})))()'
-```
-
-`command` triggers a palette action; `eval` accepts parameters and returns JSON.
-Inspect the result's `code` (0 success, 1 findings/conflicts, 2 execution failure),
-not just the Obsidian process exit status. See [native invocation](skills/noteweave-query/references/obsidian-cli.md)
-for the command catalog, absolute vault validation, and waiting for palette results.
-
-The same release includes `runtime.zip`: generic `noteweave-query`, `noteweave-write` and
-`noteweave-research` skills, an explicitly offline Node runner, and shared validation.
-There is no daily `kb` wrapper. Desktop automation and offline CI use the same
-TypeScript core. See [instance installation](docs/instances.md).
+The build creates `runtime.zip` (programs), `agent-plugin.zip` (skills and tools),
+`installer.py`, the Obsidian assets and `SHA256SUMS`. CI tests the same release
+artifacts. A tagged release also includes a source-pinned `tools.lock.json`.
+Upstream attributions are in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

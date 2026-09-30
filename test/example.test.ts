@@ -5,8 +5,8 @@ import { join } from "node:path";
 import { readSchema, readFrontmatter, specFor, pageName, validate, claimedAttributes, checkRelations } from "../src/validation";
 
 test("the standalone example has valid frontmatter and synchronized relations", () => {
-  const vault = join(process.env.NOTEWEAVE_ROOT!, "example-vault");
-  const schema = readSchema(readFileSync(join(vault, ".kb/schema.json"), "utf8"));
+  const vault = join(process.env.NOTEWEAVER_ROOT!, "example-vault");
+  const schema = readSchema(readFileSync(join(vault, ".noteweaver/schema.json"), "utf8"));
   const pages = Object.keys(schema.directories).flatMap((directory) =>
     readdirSync(join(vault, directory)).filter((name) => name.endsWith(".md") && specFor(schema, `${directory}/${name}`)).map((name) => ({
       path: `${directory}/${name}`, text: readFileSync(join(vault, directory, name), "utf8"),

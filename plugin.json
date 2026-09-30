@@ -1,0 +1,9 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "noteweaver",
+  "version": "0.12.0",
+  "description": "Manage and generate schema-driven knowledge banks on native Obsidian.",
+  "author": {
+    "name": "CARI-DAAL"
+  }
+}

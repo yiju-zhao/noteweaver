@@ -4,8 +4,10 @@ import { Checker, refs } from "./check";
 import { renderIndexes, renderSchema } from "./render";
 import { lift } from "./lift";
 import { migrateSources } from "./sources";
+import type { InitOptions } from "../initialize";
 export interface Request {
-  operation: "check" | "index" | "schema" | "lift" | "sources" | "refs" | "info" | "review";
+  initialize?: InitOptions;
+  operation: "init" | "check" | "index" | "schema" | "lift" | "sources" | "refs" | "info" | "review";
   base?: string;
   name?: string;
   check?: boolean;
@@ -116,6 +118,6 @@ export function execute(
         request.dryRun ? [] : changes);
     }
     default:
-      throw new Error("unknown Noteweave operation");
+      throw new Error("unknown Noteweaver operation");
   }
 }

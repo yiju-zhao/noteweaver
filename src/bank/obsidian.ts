@@ -14,6 +14,7 @@ import {
 } from "./model";
 import { history, loadInstance, record } from "./node";
 import { execute, Request, Result } from "./operations";
+import { initialFiles, planInitialization } from "../initialize";
 import { applyChanges } from "./write";
 export class ObsidianBank {
   private busy = false;
@@ -23,7 +24,7 @@ export class ObsidianBank {
       return {
         apiVersion: 1,
         code: 2,
-        data: { error: "another Noteweave operation is running" },
+        data: { error: "another Noteweaver operation is running" },
         changes: [],
       };
     this.busy = true;
@@ -33,7 +34,45 @@ export class ObsidianBank {
         throw new Error(
           "full knowledge-bank automation requires desktop Obsidian",
         );
-      const instance = loadInstance(adapter.getBasePath());
+      if (request.vault && path.resolve(request.vault) !== path.resolve(adapter.getBasePath()))
+        throw new Error("requested vault does not match the running Obsidian vault");
+      if (request.operation === "init") {
+        const options = { vaultName: this.app.vault.getName(), ...request.initialize };
+        if (options.vaultName !== this.app.vault.getName()) throw new Error("vaultName must match the running Obsidian vault");
+        const initial = initialFiles(options), observed = new Map<string, string | null>(), occupied = new Set<string>();
+        for (const p of [".kb", ".noteweave", ".obsidian/kb-schema.json", ...Object.keys(initial.files)]) {
+          const stat = await adapter.stat(p);
+          if (stat) occupied.add(p);
+          if (p in initial.files) observed.set(p, stat?.type === "file" ? await adapter.read(p) : null);
+        }
+        const blockedDirectories = new Set<string>();
+        for (const p of initial.directories) {
+          const stat = await adapter.stat(p);
+          if (stat && stat.type !== "folder") blockedDirectories.add(p);
+        }
+        const result = planInitialization(options, observed, occupied, blockedDirectories);
+        if (!request.dryRun && result.code === 0) {
+          const ensure = async (folder: string) => {
+            let current = "";
+            for (const part of folder.split("/")) {
+              current += (current ? "/" : "") + part;
+              if (!(await adapter.exists(current))) await adapter.mkdir(current);
+            }
+          };
+          await applyChanges({
+            read: async p => await adapter.exists(p) ? await adapter.read(p) : null,
+            write: async patch => {
+              if (await adapter.exists(patch.path)) throw new Error(`file changed since planning: ${patch.path}`);
+              await ensure(patch.path.slice(0, patch.path.lastIndexOf("/")));
+              if (patch.path.split("/").some(p => p.startsWith("."))) await adapter.write(patch.path, patch.after);
+              else await this.app.vault.create(patch.path, patch.after);
+            },
+          }, result.changes);
+          for (const directory of result.data.directories) await ensure(directory);
+        }
+        return { ...result, changes: result.changes.map(p => ({path: p.path, before: null, after: ""})) };
+      }
+      const instance = loadInstance(adapter.getBasePath(), this.app.vault.configDir);
       if (request.vault && path.resolve(request.vault) !== instance.vault)
         throw new Error(
           "requested vault does not match the running Obsidian vault",

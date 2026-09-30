@@ -4,6 +4,6 @@
   "vault_name": "example-vault",
   "repository_root": "..",
   "paths": {
-    "schema": ".kb/schema.json"
+    "schema": ".noteweaver/schema.json"
   }
 }

@@ -2,6 +2,7 @@ import type { Request, Result } from "./bank/operations";
 
 /** Native command palette actions; parameterized requests use runAutomation via eval. */
 export const bankCommands: { id: string; name: string; request: Request }[] = [
+  { id: "init-preview", name: "预览新知识库", request: { operation: "init", dryRun: true } },
   { id: "check", name: "检查完整知识库", request: { operation: "check" } },
   { id: "index", name: "更新知识库索引", request: { operation: "index" } },
   { id: "schema", name: "生成词表文档", request: { operation: "schema" } },
@@ -25,7 +26,7 @@ export class CommandResults {
   }
   async result(expectedId?: string): Promise<Result & { commandId?: string }> {
     const latest = this.latest;
-    if (!latest) return failure("no Noteweave bank command has run since plugin load");
+    if (!latest) return failure("no Noteweaver bank command has run since plugin load");
     if (expectedId && latest.id !== expectedId)
       return failure(`latest command is ${latest.id}, expected ${expectedId}; use runAutomation for an isolated result`);
     return { ...await latest.pending, commandId: latest.id };
@@ -33,8 +34,8 @@ export class CommandResults {
 }
 
 export function commandSummary(request: Request, result: Result): string {
-  if (result.code === 2) return `Noteweave：${result.data.error}`;
-  if (request.operation === "check") return `Noteweave：${result.data.errors} 错误，${result.data.warnings} 警告`;
+  if (result.code === 2) return `Noteweaver：${result.data.error}`;
+  if (request.operation === "check") return `Noteweaver：${result.data.errors} 错误，${result.data.warnings} 警告`;
   const mode = request.dryRun ? "预览" : "完成";
-  return `Noteweave ${request.operation} ${mode}（code=${result.code}）；详细结果可用 Obsidian eval 读取 commandResult()`;
+  return `Noteweaver ${request.operation} ${mode}（code=${result.code}）；详细结果可用 Obsidian eval 读取 commandResult()`;
 }

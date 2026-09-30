@@ -412,7 +412,7 @@ export class Checker {
             this.add(
               "relation-stale",
               p.rel,
-              `${k}: ${q.name}.${t.counterpart} is missing [[${p.name}]]; run Noteweave relation sync in Obsidian`,
+              `${k}: ${q.name}.${t.counterpart} is missing [[${p.name}]]; run Noteweaver relation sync in Obsidian`,
               1,
             );
         }
@@ -538,7 +538,7 @@ export class Checker {
       this.warn(
         "claim-place",
         rel,
-        `${where}: unscoped direct value; Obsidian command noteweave:lift moves it into frontmatter`,
+        `${where}: unscoped direct value; Obsidian command noteweaver:lift moves it into frontmatter`,
         line,
       );
     this.checkValid(p, c, where, line);
@@ -960,7 +960,7 @@ export class Checker {
         this.add(
           "index-stale",
           rel,
-          "differs from its generated form; run Obsidian command noteweave:index",
+          "differs from its generated form; run Obsidian command noteweaver:index",
         );
     for (const [rel, reason] of Object.entries(
       staleSchema(this.repo, this.reg),

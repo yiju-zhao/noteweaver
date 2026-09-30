@@ -1,70 +1,51 @@
-// Deterministic ZIP_STORED archive. Fixed metadata keeps CI and local hashes equal.
-import { readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { readFileSync, readdirSync, writeFileSync, mkdirSync, copyFileSync, existsSync, mkdtempSync, rmSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
-const root = dirname(dirname(fileURLToPath(import.meta.url)));
-const entries = [];
-function walk(dir) {
-  for (const e of readdirSync(dir, { withFileTypes: true })) {
-    const p = join(dir, e.name);
-    if (e.isDirectory()) walk(p);
-    else {
-      const name = relative(root, p).replaceAll("\\", "/");
-      entries.push([name, readFileSync(name === "skills/noteweave-query/scripts/context.cjs"
-        ? join(root, "dist/skill-context.cjs") : p)]);
-    }
+import { createHash } from "node:crypto";
+import { execFileSync } from "node:child_process";
+import { writeZip } from "./zip.mjs";
+const root = dirname(dirname(fileURLToPath(import.meta.url))), dist = join(root, "dist");
+const version = JSON.parse(readFileSync(join(root, "package.json"))).version;
+const hash = data => createHash("sha256").update(data).digest("hex");
+const files = new Map();
+function walk(directory, prefix) {
+  for (const e of readdirSync(directory, { withFileTypes: true })) {
+    if (["node_modules", "__pycache__", ".DS_Store"].includes(e.name)) continue;
+    const p = join(directory, e.name), name = prefix + e.name;
+    if (e.isSymbolicLink()) throw Error(`cannot bundle symlink ${p}`);
+    if (e.isDirectory()) walk(p, name + "/");
+    else files.set(name, readFileSync(p));
   }
 }
-walk(join(root, "skills"));
-for (const name of ["cli.cjs", "context.cjs", "runtime.cjs"])
-  entries.push(["cli/" + name, readFileSync(join(root, "dist", name))]);
-entries.push([
-  "validation.cjs",
-  readFileSync(join(root, "dist/validation.cjs")),
+// The whole reviewed archify runtime is pinned and bundled, including schemas/examples.
+const archifyHash = "4c59fa6557a2385beaaef8c7219cc414573acc9f0c30a932d5053b0b20689a46";
+const cache = join(root, ".cache"); mkdirSync(cache, {recursive:true});
+const archive = join(cache, "archify-2.16.0.zip");
+if (!existsSync(archive) || hash(readFileSync(archive)) !== archifyHash) {
+  const response = await fetch("https://github.com/tt-a1i/archify/releases/download/v2.16.0/archify.zip");
+  if (!response.ok) throw Error(`archify download: ${response.status}`);
+  const bytes = Buffer.from(await response.arrayBuffer());
+  if (hash(bytes) !== archifyHash) throw Error("archify SHA-256 mismatch");
+  writeFileSync(archive, bytes);
+}
+const temporary = mkdtempSync(join(cache, "archify-"));
+try { execFileSync("unzip", ["-q", archive, "-d", temporary]); walk(join(temporary,"archify"), "skills/archify/"); }
+finally { rmSync(temporary, {recursive:true,force:true}); }
+walk(join(root,"skills"), "skills/");
+walk(join(root,"templates"), "templates/");
+walk(join(root,"docs"), "docs/");
+files.set("skills/noteweaver-query/scripts/context.cjs", readFileSync(join(dist,"skill-context.cjs")));
+for (const name of ["plugin.json", ".codex-plugin/plugin.json", ".claude-plugin/plugin.json", "THIRD_PARTY_NOTICES.md", "scripts/setup-tools.sh"])
+  files.set(name, readFileSync(join(root,name)));
+const skills = readdirSync(join(root,"skills"), {withFileTypes:true}).filter(e=>e.isDirectory()).map(e=>e.name).sort();
+const inventory = Object.fromEntries([...files].sort(([a],[b])=>a<b?-1:a>b?1:0).map(([p,b])=>[p,hash(b)]));
+files.set("bundle.json", Buffer.from(JSON.stringify({version, skills, files:inventory}, null,2)+"\n"));
+writeZip(join(dist,"agent-plugin.zip"), [...files]);
+writeZip(join(dist,"runtime.zip"), [
+  ...["cli.cjs","context.cjs","runtime.cjs"].map(name=>["cli/"+name,readFileSync(join(dist,name))]),
+  ["validation.cjs",readFileSync(join(dist,"validation.cjs"))],
 ]);
-entries.sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
-const crcTable = Array.from({ length: 256 }, (_, n) => {
-  for (let k = 0; k < 8; k++) n = n & 1 ? 0xedb88320 ^ (n >>> 1) : n >>> 1;
-  return n >>> 0;
-});
-function crc(bytes) {
-  let c = 0xffffffff;
-  for (const b of bytes) c = crcTable[(c ^ b) & 255] ^ (c >>> 8);
-  return (c ^ 0xffffffff) >>> 0;
-}
-const files = [],
-  central = [];
-let offset = 0;
-for (const [name, data] of entries) {
-  const n = Buffer.from(name),
-    checksum = crc(data),
-    header = Buffer.alloc(30),
-    directory = Buffer.alloc(46);
-  header.writeUInt32LE(0x04034b50);
-  header.writeUInt16LE(20, 4);
-  header.writeUInt16LE(0x800, 6);
-  header.writeUInt16LE(0x5021, 12);
-  header.writeUInt32LE(checksum, 14);
-  header.writeUInt32LE(data.length, 18);
-  header.writeUInt32LE(data.length, 22);
-  header.writeUInt16LE(n.length, 26);
-  directory.writeUInt32LE(0x02014b50);
-  directory.writeUInt16LE(0x314, 4);
-  header.copy(directory, 6, 4, 30);
-  directory.writeUInt32LE((0o100644 << 16) >>> 0, 38);
-  directory.writeUInt32LE(offset, 42);
-  files.push(header, n, data);
-  central.push(directory, n);
-  offset += header.length + n.length + data.length;
-}
-const index = Buffer.concat(central),
-  end = Buffer.alloc(22);
-end.writeUInt32LE(0x06054b50);
-end.writeUInt16LE(entries.length, 8);
-end.writeUInt16LE(entries.length, 10);
-end.writeUInt32LE(index.length, 12);
-end.writeUInt32LE(offset, 16);
-writeFileSync(
-  join(root, "dist/runtime.zip"),
-  Buffer.concat([...files, index, end]),
-);
+copyFileSync(join(root,"scripts/install.py"), join(dist,"installer.py"));
+const assets = ["main.js","manifest.json","styles.css","validation.cjs","runtime.zip","agent-plugin.zip","installer.py"];
+writeFileSync(join(dist,"SHA256SUMS"),assets.map(name=>`${hash(readFileSync(join(dist,name)))}  ${name}\n`).join(""));
+console.log(`Packaged Noteweaver ${version}: ${skills.length} skills, ${files.size} agent plugin files`);

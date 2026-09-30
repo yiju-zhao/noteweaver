@@ -1,0 +1,11 @@
+{
+  "name": "noteweaver-browser",
+  "private": true,
+  "version": "1.0.0",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "dependencies": {
+    "agent-browser": "0.38.1"
+  }
+}

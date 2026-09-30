@@ -4,4 +4,4 @@ export { checkRelations } from "./relations";
 export const apiVersion = 1;
 export const schemaVersion = 3;
 
-export { readInstanceConfig, schemaPath, instanceSchemaPath } from "./instance";
+export { INSTANCE_DIRECTORY, INSTANCE_CONFIG, readInstanceConfig, readVaultInstance } from "./instance";

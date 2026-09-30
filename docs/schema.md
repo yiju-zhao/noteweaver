@@ -1,8 +1,8 @@
 # Schema format 3
 
-The vocabulary belongs to the vault at `.kb/schema.json`, selected by
-`.kb/config.json`. Noteweave reads it and never replaces it during upgrades.
-The [synthetic example](../example-vault/.kb/schema.json) includes the metadata
+The vocabulary belongs to the vault at `.noteweaver/schema.json`, selected by
+`.noteweaver/config.json`. Noteweaver reads it and never replaces it during upgrades.
+The [synthetic example](../example-vault/.noteweaver/schema.json) includes the metadata
 used by the CLI and generated rule tables. Legacy locations and migration are
 explained in [instances](instances.md).
 
@@ -68,8 +68,8 @@ relative `..` segments and missing aliases are rejected. Backlinks are computed
 by Obsidian, never persisted into immutable evidence cards.
 
 Instances without `formats.sources` retain compatibility with legacy
-`{id, resource}` entries. After setting the format, preview `obsidian vault=<name> command id=noteweave:sources-preview`
-and run `obsidian vault=<name> command id=noteweave:sources` to migrate through Obsidian. Migration validates the whole
+`{id, resource}` entries. After setting the format, preview `obsidian vault=<name> command id=noteweaver:sources-preview`
+and run `obsidian vault=<name> command id=noteweaver:sources` to migrate through Obsidian. Migration validates the whole
 bank before writing, changes only `sources` and `generated`, rejects extra source
 metadata, and is idempotent. Update the instance's change log afterwards.
 As with other multi-file operations, concurrent edits stop remaining writes;

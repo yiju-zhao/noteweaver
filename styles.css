@@ -1,32 +1,32 @@
-/* noteweave: status bar, findings view and the ## 断言 table. File-tree icons are generated from kb-schema.json. */
-.noteweave-status.noteweave-error { color: var(--text-error); }
-.noteweave-status.noteweave-warning { color: var(--text-warning); }
+/* noteweaver: status bar, findings view and the ## 断言 table. File-tree icons are generated from kb-schema.json. */
+.noteweaver-status.noteweaver-error { color: var(--text-error); }
+.noteweaver-status.noteweaver-warning { color: var(--text-warning); }
 
-.noteweave-view .noteweave-error { color: var(--text-error); }
-.noteweave-view .noteweave-warning { color: var(--text-warning); }
-.noteweave-view .noteweave-muted { color: var(--text-muted); font-size: var(--font-ui-small); }
-.noteweave-view .noteweave-bar { display: flex; align-items: center; justify-content: space-between; margin-top: 1em; }
-.noteweave-view .noteweave-file { margin-top: 0.6em; font-size: var(--font-ui-small); }
-.noteweave-view ul { margin: 0.2em 0; padding-inline-start: 1.2em; }
-.noteweave-view code { font-size: 0.85em; }
+.noteweaver-view .noteweaver-error { color: var(--text-error); }
+.noteweaver-view .noteweaver-warning { color: var(--text-warning); }
+.noteweaver-view .noteweaver-muted { color: var(--text-muted); font-size: var(--font-ui-small); }
+.noteweaver-view .noteweaver-bar { display: flex; align-items: center; justify-content: space-between; margin-top: 1em; }
+.noteweaver-view .noteweaver-file { margin-top: 0.6em; font-size: var(--font-ui-small); }
+.noteweaver-view ul { margin: 0.2em 0; padding-inline-start: 1.2em; }
+.noteweaver-view code { font-size: 0.85em; }
 
-.noteweave-claims { overflow-x: auto; margin: 0.5em 0 1em; }
-.noteweave-claims table { font-size: var(--font-smaller); border-collapse: collapse; }
-.noteweave-claims th, .noteweave-claims td { vertical-align: top; }
-.noteweave-claims .noteweave-claim-retracted td { text-decoration: line-through; color: var(--text-muted); }
-.noteweave-claims .noteweave-claim-retracted td:last-child { text-decoration: none; }
-.noteweave-claims .noteweave-claims-error { color: var(--text-error); }
-.noteweave-claims-yaml summary { color: var(--text-muted); font-size: var(--font-ui-small); cursor: pointer; }
+.noteweaver-claims { overflow-x: auto; margin: 0.5em 0 1em; }
+.noteweaver-claims table { font-size: var(--font-smaller); border-collapse: collapse; }
+.noteweaver-claims th, .noteweaver-claims td { vertical-align: top; }
+.noteweaver-claims .noteweaver-claim-retracted td { text-decoration: line-through; color: var(--text-muted); }
+.noteweaver-claims .noteweaver-claim-retracted td:last-child { text-decoration: none; }
+.noteweaver-claims .noteweaver-claims-error { color: var(--text-error); }
+.noteweaver-claims-yaml summary { color: var(--text-muted); font-size: var(--font-ui-small); cursor: pointer; }
 
-.metadata-property-value.noteweave-nested { display: block; min-width: 0; padding: 0.25em 0; }
-.noteweave-nested-fields { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 0.2em 0.8em; margin: 0; }
-.noteweave-nested-fields dt, .noteweave-nested-source-id { color: var(--text-muted); font-size: var(--font-smaller); }
-.noteweave-nested-fields dd { margin: 0; overflow-wrap: anywhere; }
-.noteweave-nested-list { margin: 0.3em 0; padding-inline-start: 1.4em; }
-.noteweave-nested-list > li { margin-block: 0.45em; }
-.noteweave-nested-source-id { display: block; background: none; padding: 0; }
-.noteweave-nested-source a { overflow-wrap: anywhere; }
-.noteweave-nested-sources > summary { cursor: pointer; color: var(--text-muted); }
-.noteweave-nested-muted { color: var(--text-muted); font-size: var(--font-smaller); }
-.noteweave-nested-missing { color: var(--text-error); overflow-wrap: anywhere; }
-.noteweave-nested-scalar { white-space: pre-wrap; }
+.metadata-property-value.noteweaver-nested { display: block; min-width: 0; padding: 0.25em 0; }
+.noteweaver-nested-fields { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 0.2em 0.8em; margin: 0; }
+.noteweaver-nested-fields dt, .noteweaver-nested-source-id { color: var(--text-muted); font-size: var(--font-smaller); }
+.noteweaver-nested-fields dd { margin: 0; overflow-wrap: anywhere; }
+.noteweaver-nested-list { margin: 0.3em 0; padding-inline-start: 1.4em; }
+.noteweaver-nested-list > li { margin-block: 0.45em; }
+.noteweaver-nested-source-id { display: block; background: none; padding: 0; }
+.noteweaver-nested-source a { overflow-wrap: anywhere; }
+.noteweaver-nested-sources > summary { cursor: pointer; color: var(--text-muted); }
+.noteweaver-nested-muted { color: var(--text-muted); font-size: var(--font-smaller); }
+.noteweaver-nested-missing { color: var(--text-error); overflow-wrap: anywhere; }
+.noteweaver-nested-scalar { white-space: pre-wrap; }

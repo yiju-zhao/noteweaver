@@ -1,142 +1,143 @@
-# Instances, runtime and agent skills
+# Instances and installation
 
-Noteweave owns the reusable code and workflows. Each vault owns its schema,
-editorial policies, review records and release pin. Installed runtime files are
-replaceable; instance configuration and local Obsidian settings are not.
-
-## Instance descriptor
-
-Create `<vault>/.kb/config.json`:
+A Noteweaver instance is discovered through `<vault>/.noteweaver/config.json`.
+The kernel, desktop adapter, offline runner and skill context share the same path
+parser. All content paths are relative to the vault and must stay inside it:
 
 ```json
 {
   "version": 1,
-  "name": "Example",
-  "vault_name": "example-vault",
+  "name": "Research notebook",
+  "vault_name": "research-notebook",
   "repository_root": "..",
   "paths": {
-    "schema": ".kb/schema.json",
+    "schema": ".noteweaver/schema.json",
     "bank": "bank",
     "evidence": "evidence",
-    "policies": ".kb/policies",
-    "review": ".kb/review"
+    "policies": ".noteweaver/policies",
+    "review": ".noteweaver/review"
   },
   "require_obsidian": true,
-  "commands": {
-    "setup": ".agents/skills/setup.sh"
-  }
+  "commands": { "setup": ".agents/skills/setup.sh" }
 }
 ```
 
-Paths are vault-relative and cannot escape the vault. `repository_root` is `.`
-when the vault is the repository, or `..` when it is an immediate child.
-Commands are repository-relative and belong to the caller; review them as local
-configuration. A research workflow may add `research_setup` and `research_skills`.
-The plugin reads schema/evidence paths. Skills additionally use the instance name,
-commands and `require_obsidian`; the CLI remains available to CI.
+`repository_root` is `.` for a standalone vault or `..` for a vault directly inside
+its repository. The descriptor may also declare `commands.research_setup` and
+`research_skills`. Commands are repository-relative and belong to that instance.
+The context helper returns absolute top-level `paths` and vault-relative
+`config.paths`. The instance owns schema, policies, review records and release pin;
+installed tools are replaceable.
 
-Policies are Markdown files under the configured policy path, starting at
-`README.md`. The three vocabulary documents use the generated markers shown in
-the example. Review documents use frontmatter `status: open` for actionable items.
-The `review` operation lists documents, not the number of decisions contained in them.
+## Agent plugin
 
-## Install runtime and skills
+The installer reads the complete release manifest and installs all nine skills,
+compiled helpers, licenses and pinned archify runtime into
+`.agents/plugins/noteweaver`. Its `noteweaver-instance.json` binds the installation
+to this vault; that local file is not in the release. Cached copies retain the
+binding. An explicit `--vault` overrides it. An unbound reusable plugin discovers
+only a unique instance in the current project. Cache directory names are never a
+substitute for explicit instance selection. Ambiguous or invalid instances fail.
 
-Download the same release's `runtime.zip` and verify its release SHA-256 before
-extracting. Install the archive's `skills/<name>/` directories directly into
-the repository's `.agents/skills/<name>/`; install the other entries into the
-vault's `.kb/runtime/`. Install Node.js 20+ for the offline runner and context helper;
-installed JavaScript is already bundled, so npm installation is unnecessary.
-Use `runAutomation({operation:"info",vault:"<absolute vault path>"})` through Obsidian `eval` to verify the selected instance.
-Ignore `.kb/runtime/` and downloaded archives in the vault repository; commit the
-release version and hashes in that repository's lock file.
+For Codex, declare `.agents/plugins/marketplace.json` in the consuming repository:
 
-Ignore the three installed `.agents/skills/noteweave-{query,research,write}/`
-directories; the pinned release and installer recreate them. Each is a real skill
-directory, with a self-contained context script. Claude Code can use
-`.claude/skills/` links to the same entries. Maintain generic skill source in this repository's `skills/`,
-and change instance policy in the vault. Tool-specific or third-party skills stay
-with their own owners; `research_skills` names the available integrations.
+```json
+{
+  "name": "noteweaver-local",
+  "plugins": [{
+    "name": "noteweaver",
+    "source": { "source": "local", "path": "./.agents/plugins/noteweaver" },
+    "policy": { "installation": "AVAILABLE", "authentication": "ON_INSTALL" },
+    "category": "Productivity"
+  }]
+}
+```
 
-`noteweave-query/scripts/context.cjs` resolves its bound installed instance (or explicit
-`--vault`) and checks the caller's Obsidian requirement. It verifies the vault path,
-not only the display name. Installing the skill globally by linking the instance's
-entry retains that binding when invoked from a different project.
+Register the repository with `codex plugin marketplace add /absolute/repository`
+and install `codex plugin add noteweaver@noteweaver-local`. Refresh the host or start
+a new session after changes. Claude Code can register the same folder through its
+`.claude-plugin/marketplace.json` source catalog and project-scoped plugin settings;
+the generated package includes `.claude-plugin/plugin.json`.
 
-## Migrate an existing vault
+The local source path is relative to the marketplace root. Host installation is
+separate from unpacking verified release files. The consuming repository should
+commit registration and locks, and ignore the installed plugin/cache. Avoid
+simultaneously discovering local `.agents/skills` copies and the native plugin.
+For another agent host use installer `--mode skills`, then configure its discovery
+of `.agents/skills/`. Mode changes require explicitly removing the previous
+host's discovery entries; the installer will not silently delete a custom skill.
 
-First back up its schema and settings. Move `.obsidian/kb-schema.json` to
-`.kb/schema.json` without changing bytes, add the instance descriptor, then reload
-Noteweave. If both schema files exist, schema-dependent operations stop until the
-ambiguity is resolved. Legacy vaults without an instance descriptor continue to
-use the original path. Upgrade code and runtime together; retain actor and relation
-state in the installed plugin's `data.json`.
+Run `bash <installed-plugin>/scripts/setup-tools.sh` to verify tool prerequisites,
+or add `--research` to install and smoke-test the pinned browser CLI. The browser
+runtime is downloaded by npm with the packaged lockfile; its Node.js requirement
+is separate from the kernel. The browser wrapper keeps sockets in a user-scoped
+temporary directory; browser credentials and profiles are never part of releases.
 
-## One-time evidence cleanup
+## Initialization and adoption
 
-The shared core normally rejects changes to committed evidence. A vault may explicitly
-pin a reviewed deletion receipt in `cleanup_receipts` with its repository-relative
-path and SHA-256. Receipts must be under the configured review directory, match the
-exact base commit, be new in that diff, contain an explicit authorization and
-reasons, and list hashes of paired card/original deletions. Referenced or unlisted
-files remain protected. A receipt does not authorize subsequent cleanups; updating
-this instance policy is a human decision.
+With Noteweaver enabled in the running vault, preview:
 
-## Automation and CI
+```javascript
+await app.plugins.plugins.noteweaver.runAutomation({
+  operation: "init", vault: "/absolute/vault", dryRun: true,
+  initialize: { name: "Research notebook", repositoryRoot: "." }
+});
+```
 
-Daily operations use native `obsidian vault=<name> command id=noteweave:<id>`
-or `obsidian vault=<name> eval code=<JavaScript>`. The plugin registers the
-knowledge-bank actions in the command palette. `command` only accepts an ID and
-does not await its callback; retrieve the latest result with `commandResult(id)`.
-For agents, prefer a single `eval` calling `runAutomation(request)` and serializing
-the awaited result as JSON. Pass the absolute `vault` path for instance validation.
-See the [invocation reference](../skills/noteweave-query/references/obsidian-cli.md) for
-requests, command IDs and result handling. Protocol version 1 uses `code` 0 for
-success, 1 for findings/conflicts and 2 for execution failure. A failed connection
-never switches to filesystem writes. No new Obsidian CLI subcommand is invented.
+`initialize.paths` customizes directory names and `initialize.schema` supplies a
+complete schema. Omit `dryRun` to apply an authorized plan through Obsidian. The
+kernel produces config, schema, starter policies, indexes and log. Existing files
+with different contents produce conflicts and no writes; matching files are
+retained. Repeating initialization is idempotent until the instance customizes a
+starter file, at which point initialization reports the difference instead of
+resetting it. Ordinary updates use the normal editing operations.
 
-`index`, `schema` and `lift` compute edits with the same pure core. The plugin
-checks the expected original content before writing, uses `Vault.process` for
-notes and the vault adapter for hidden policy documents. Concurrent edits stop
-the remaining writes; already completed edits can be inspected and rerun. This
-is not a transaction across files. `check:true` and `dryRun:true` return plans without
-writing. Search, read, rename and trash continue to use native Obsidian commands.
+Run `check` afterwards. The newly created policies belong to the instance and
+must describe its actual collection scope. Empty Git history is reported as a
+warning: structural validity does not imply append-only history was checked.
 
-For CI, run `node <vault>/.kb/runtime/cli/cli.cjs --root <vault> --offline check --json`. This calls
-the same bundled core without a desktop application. Offline writes are reserved
-for explicitly selected isolated fixtures; everyday work uses the
-live adapter. Git must be available for history checks. Full automation is a
-desktop feature; regular plugin display does not load desktop automation modules.
+## Migrate Noteweave and older instances
 
-The `cli/runtime.cjs` bundle exports the Node adapter and pure operations for
-integration tests. It is versioned with the plugin, not a second rule implementation.
-Upgrading from 0.5 replaces Python runtime files; consumers that imported `kblib`
-must call the offline runner or the TypeScript bundle instead. Instance installer scripts and
-consumer test harnesses may use Python independently of the Noteweave runtime.
+Back up the instance and record the hashes of schema, evidence, review receipts
+and plugin `data.json`. Use the running Obsidian adapter to rename `.kb` or
+`.noteweave` to `.noteweaver`, then update descriptor paths and live references.
+Old metadata alongside new metadata is rejected; do not keep two configurations.
+Immutable evidence, receipts and published historical versions retain their bytes.
 
-Version 0.8 removes the daily CLI wrapper. Remove `commands.kb` and local `kb` shims, update skills and hooks to native Obsidian calls, and keep a separate explicit offline check for CI. Hooks must parse the JSON result and propagate its code; Obsidian process success alone is insufficient.
+Disable the old `noteweave` (or older `kb-types`) plugin in Obsidian. Move its
+entire settings directory to `.obsidian/plugins/noteweaver`, preserving `data.json`.
+If the target already has separate settings, resolve that conflict before moving.
+Install the new verified release, reload the community plugin list and enable
+`noteweaver`. Update saved view types, custom hotkeys, command prefixes, hooks and
+CI references. Never run the two identities simultaneously. There is no old-name
+runtime alias.
 
-## Upgrade the plugin identity
+Move any custom edits in the prior local skills to their upstream source before
+removing old discovery entries. Generic source now belongs to Noteweaver. Update
+personal links or retire them when native plugin discovery replaces them. The
+installer refuses to overwrite an unmanaged plugin folder; move a reviewed old
+copy aside first. It checks all assets and bundle hashes before writing and
+restores earlier replacements after an I/O failure.
 
-Version 0.9 uses `noteweave` as the sole plugin ID. To upgrade an installation
-from the previous ID, keep the vault open and disable the old plugin with
-`obsidian vault=<name> plugin:disable id=kb-types`. Move its entire plugin directory
-from `.obsidian/plugins/kb-types/` to `.obsidian/plugins/noteweave/`, preserving
-`data.json` byte for byte. If both directories already contain settings, compare
-them before proceeding; never overwrite an independent installation's settings.
-Install the verified 0.9 release files in the new directory, refresh Obsidian's
-plugin list if needed, then run `obsidian vault=<name> plugin:enable id=noteweave`.
-Update any custom hotkeys or saved findings views to the new command/view prefix.
-Do not enable both identities. Existing schemas and knowledge content do not change.
-There is no compatibility alias for old command IDs.
+For rollback, disable the new plugin, restore the recorded previous identity,
+metadata paths and descriptor, restore the previous release lock and its matching
+installer, and reinstall that release. Preserve the current `data.json`; compare
+with the saved snapshot if either version changed its state format. Restore host
+registration from the same migration snapshot. Do not mix a new identity with an
+old manifest.
 
-## Skill names in 0.10
+## Automation and checks
 
-The bundled entry points are `noteweave-query`, `noteweave-write` and
-`noteweave-research`. Replace the previous kb-prefixed discovery links under
-`.agents/skills/`, `.claude/skills/` and any personal global skill directories;
-update their callers at the same time. Folder names and SKILL.md names match.
-Remove old discovery entries so agents see one copy of each workflow. The query
-context script still follows the installed instance's real path when invoked
-through a global symlink from another project. Local helpers named by
-`research_skills` remain owned by their instance.
+Protocol version 1 returns `{apiVersion,code,data,changes}`. Code 0 is success,
+1 is findings/conflicts, and 2 is execution failure. `init`, `index`, `schema`,
+`lift` and `sources` use planned writes with original-content checks. Across files
+this is not a transaction: an external concurrent edit stops remaining writes;
+inspect completed changes and rerun. The installer replacement transaction is
+separate from vault content editing.
+
+Daily operations run through native Obsidian command/eval. CI explicitly invokes
+`node <metadata>/runtime/cli/cli.cjs --root <vault> --offline check --json`.
+The runtime exports the same kernel for consumer regressions. Read-only `info`
+returns absolute instance paths; `review` lists documents with status open, not a
+count of individual decisions. One-time approved evidence cleanup receipts remain
+instance-owned and must match their recorded base commit and SHA-256.

@@ -42,7 +42,7 @@ export function migrateSources(repo: Repo, now: string): Patch[] {
     const before = repo.store.read(page.path);
     const linked = setFrontmatterKey(before, "sources", values);
     const after = linked && setFrontmatterLines(linked, "generated", [
-      `generated: {by: noteweave/sources, at: ${now}}`,
+      `generated: {by: noteweaver/sources, at: ${now}}`,
     ]);
     if (!after) throw new Error(`cannot update frontmatter: ${page.path}`);
     changes.push({ path: page.path, before, after });

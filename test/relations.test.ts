@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { readFrontmatter, readSchema, setFrontmatterKey } from "../src/core";
 import { applyRelationPlan, planRelations, type RelationPage, type RelationPlan } from "../src/relations";
 
-const raw = JSON.parse(readFileSync(join(process.env.NOTEWEAVE_ROOT!, "example-vault/.kb/schema.json"), "utf8"));
+const raw = JSON.parse(readFileSync(join(process.env.NOTEWEAVER_ROOT!, "example-vault/.noteweaver/schema.json"), "utf8"));
 const schema = readSchema(JSON.stringify(raw));
 function page(name: string, cls = "model", fields = ""): RelationPage {
   const dir = cls === "concept" ? "concepts" : `entities/${cls === "organization" ? "organizations" : cls === "person" ? "people" : "models"}`;

@@ -1,5 +1,6 @@
 /** Filesystem and Git adapter for CI. The desktop adapter reuses only Git acquisition. */
 import fs from "node:fs";
+import { INSTANCE_CONFIG, hasInstance, instanceConfigPath, readInstanceConfig, assertSingleSchema } from "../instance";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
@@ -30,70 +31,40 @@ export function realPath(p: string): string {
   if (parent === p) return p;
   return path.join(realPath(parent), path.basename(p));
 }
-export function loadInstance(start: string): Instance {
+function existsIn(directory: string) {
+  return (relative: string) => fs.existsSync(path.join(directory, relative));
+}
+function candidatesAt(start: string): string[] {
+  if (hasInstance(existsIn(start))) return [start];
+  return fs.readdirSync(start, { withFileTypes: true })
+    .filter(e => e.isDirectory() && !e.name.startsWith(".") && hasInstance(existsIn(path.join(start, e.name))))
+    .map(e => path.join(start, e.name));
+}
+export function loadInstance(start: string, configDir = ".obsidian"): Instance {
   start = realPath(path.resolve(start));
-  const candidates = fs.existsSync(path.join(start, ".kb/config.json"))
-    ? [start]
-    : fs
-        .readdirSync(start, { withFileTypes: true })
-        .filter(
-          (e) =>
-            e.isDirectory() &&
-            !e.name.startsWith(".") &&
-            fs.existsSync(path.join(start, e.name, ".kb/config.json")),
-        )
-        .map((e) => path.join(start, e.name));
+  const candidates = candidatesAt(start);
   if (candidates.length !== 1)
-    throw new Error("select one vault with .kb/config.json using --root");
-  const vault = realPath(candidates[0]),
-    config = JSON.parse(
-      fs.readFileSync(path.join(vault, ".kb/config.json"), "utf8"),
-    );
-  if (!config || config.version !== 1)
-    throw new Error("unsupported .kb/config.json version");
-  if (![".", ".."].includes(config.repository_root ?? "."))
-    throw new Error("repository_root must be . or ..");
+    throw new Error(`select one vault with ${INSTANCE_CONFIG} using --root`);
+  const vault = realPath(candidates[0]);
+  const configPath = instanceConfigPath(existsIn(vault));
+  if (!configPath) throw new Error(`${INSTANCE_CONFIG} is required`);
+  const config = readInstanceConfig(fs.readFileSync(path.join(vault, configPath), "utf8"));
   const root = path.resolve(vault, config.repository_root ?? ".");
-  const defaults = {
-      schema: ".kb/schema.json",
-      policies: ".kb/policies",
-      review: ".kb/review",
-      bank: "bank",
-      evidence: "evidence",
-    },
-    paths: Record<string, string> = {};
-  for (const [k, d] of Object.entries(defaults)) {
-    const v = config.paths?.[k] ?? d;
-    if (
-      typeof v !== "string" ||
-      !v ||
-      path.isAbsolute(v) ||
-      v.split(/[\\/]/).includes("..") ||
-      v.includes("\\")
-    )
-      throw new Error(`invalid instance path: ${k}`);
-    const abs = realPath(path.join(vault, v));
-    if (abs !== vault && !abs.startsWith(vault + path.sep))
-      throw new Error(`instance path leaves vault: ${k}`);
-    paths[k] = slash(path.relative(root, abs));
+  const paths: Record<string, string> = {};
+  for (const [key, value] of Object.entries(config.paths)) {
+    const abs = realPath(path.join(vault, value));
+    if (!abs.startsWith(vault + path.sep))
+      throw new Error(`instance path leaves vault: ${key}`);
+    paths[key] = slash(path.relative(root, abs));
   }
-  if (fs.existsSync(path.join(vault, ".obsidian/kb-schema.json")))
-    throw new Error(
-      "two schema locations: finish the migration from .obsidian/kb-schema.json",
-    );
-  return {
-    root,
-    vault,
-    layout: { vault: slash(path.relative(root, vault)), config, paths },
-  };
+  assertSingleSchema(config, existsIn(vault), configDir);
+  return { root, vault, layout: { vault: slash(path.relative(root, vault)), config, paths } };
 }
 export function discover(start: string) {
   for (let p = path.resolve(start); ; p = path.dirname(p)) {
-    try {
-      return loadInstance(p);
-    } catch (e) {
-      if (fs.existsSync(path.join(p, ".kb/config.json"))) throw e;
-    }
+    // An invalid or ambiguous instance is an error, not permission to select a
+    // different ancestor. Only a directory without any candidate is skipped.
+    if (candidatesAt(p).length) return loadInstance(p);
     if (path.dirname(p) === p)
       throw new Error("no knowledge bank found; pass --root <vault>");
   }

@@ -1,6 +1,9 @@
-node_modules/
+node_modules
 dist/
 example-vault/.obsidian/plugins/
 example-vault/.obsidian/workspace*.json
 
 __pycache__/
+
+.cache/
+skills/agent-browser/node_modules/

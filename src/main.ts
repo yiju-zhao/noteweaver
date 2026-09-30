@@ -2,8 +2,8 @@ import type { ObsidianBank } from "./bank/obsidian";
 import { bankCommands, CommandResults, commandSummary } from "./commands";
 import { Request } from "./bank/operations";
 import { loadRegistry } from "./bank/registry";
-import { instanceSchemaPath, readInstanceConfig } from "./instance";
-// Noteweave: Obsidian glue for src/core.ts. The instance selects the vocabulary path.
+import { INSTANCE_CONFIG, readVaultInstance, InstancePaths } from "./instance";
+// Noteweaver: Obsidian glue for src/core.ts. The instance selects the vocabulary path.
 // Private property APIs are isolated in property-adapter.ts.
 import {
   App, debounce, Editor, EditorPosition, EditorSuggest, EditorSuggestContext, EditorSuggestTriggerInfo, getIcon,
@@ -14,12 +14,12 @@ import * as core from "./core";
 import { applyRelationPlan, checkRelations, planRelations, readRelationState, type RelationIssue, type RelationState } from "./relations";
 import { installReadonlyProperties } from "./property-adapter";
 
-const VIEW = "noteweave-findings";
+const VIEW = "noteweaver-findings";
 
 interface Settings { actor: string }
 const DEFAULTS: Settings = { actor: "" };
 
-export default class Noteweave extends Plugin {
+export default class Noteweaver extends Plugin {
   readonly automationVersion = 1;
   private bank?: ObsidianBank;
   private commandResults = new CommandResults();
@@ -40,6 +40,7 @@ export default class Noteweave extends Plugin {
   schemaError = "";
   private schemaMtime = -1;
   private schemaPath = "";
+  private schemaBank = "";
   private evidenceRoot = "evidence";
   private statusEl!: HTMLElement;
   private styleEl: HTMLStyleElement | null = null;
@@ -60,10 +61,10 @@ export default class Noteweave extends Plugin {
     const saved = await this.loadData();
     this.settings = { actor: typeof saved?.actor === "string" ? saved.actor : DEFAULTS.actor };
     this.relationState = readRelationState(saved?.relations);
-    this.addSettingTab(new NoteweaveSettings(this.app, this));
+    this.addSettingTab(new NoteweaverSettings(this.app, this));
     this.registerView(VIEW, (leaf) => new FindingsView(leaf, this));
     this.statusEl = this.addStatusBarItem();
-    this.statusEl.addClass("noteweave-status", "mod-clickable");
+    this.statusEl.addClass("noteweaver-status", "mod-clickable");
     this.registerDomEvent(this.statusEl, "click", () => void this.openView());
     this.registerMarkdownPostProcessor((el, ctx) => this.renderClaims(el, ctx));
     this.registerEditorSuggest(new FrontmatterSuggest(this));
@@ -88,7 +89,7 @@ export default class Noteweave extends Plugin {
     this.addCommand({ id: "sync-relations", name: "同步全库双向关系", callback: () => void this.syncRelations(true) });
     this.addCommand({ id: "reload-schema", name: "重新读取 kb-schema.json",
       callback: async () => { this.schemaMtime = -1; await this.refresh(); await this.syncRelations();
-        new Notice(this.schemaError || "Noteweave：已重新读取 schema"); } });
+        new Notice(this.schemaError || "Noteweaver：已重新读取 schema"); } });
 
     this.app.workspace.onLayoutReady(async () => {
       // Registered after the vault has loaded, so only files created from now on count as new.
@@ -112,7 +113,7 @@ export default class Noteweave extends Plugin {
       }));
       await this.refresh();
       if (!installReadonlyProperties(this, (file) => Boolean(this.specFor(file)), () => this.evidenceRoot)) {
-        new Notice("Noteweave：当前 Obsidian 不支持只读嵌套展示，请在源码中查看 generated、sources、verified", 10000);
+        new Notice("Noteweaver：当前 Obsidian 不支持只读嵌套展示，请在源码中查看 generated、sources、verified", 10000);
       }
       await this.syncRelations();
     });
@@ -147,7 +148,7 @@ export default class Noteweave extends Plugin {
         this.views().forEach((v) => v.render());
         if (plan.issues.length) {
           const message = plan.issues.map((i) => `${i.path}: ${i.message}`).join("\n");
-          if (notify || message !== this.lastRelationError) new Notice(`Noteweave：关系同步暂停\n${message}`, 10000);
+          if (notify || message !== this.lastRelationError) new Notice(`Noteweaver：关系同步暂停\n${message}`, 10000);
           this.lastRelationError = message;
           return;
         }
@@ -172,12 +173,12 @@ export default class Noteweave extends Plugin {
     })();
     try {
       await this.syncing;
-      if (notify && !this.relationIssues.length) new Notice(`Noteweave：双向关系已同步，更新 ${writes} 页`);
+      if (notify && !this.relationIssues.length) new Notice(`Noteweaver：双向关系已同步，更新 ${writes} 页`);
     } catch (e) {
       // Do not checkpoint a partial write. Retry on the next edit or explicit sync;
       // the old agreed edges preserve the user's additions and removals.
       this.lastRelationError = (e as Error).message;
-      new Notice(`Noteweave：${this.lastRelationError}`, 10000);
+      new Notice(`Noteweaver：${this.lastRelationError}`, 10000);
     } finally {
       this.syncing = null;
       if (this.syncAgain && !this.stopped) this.syncSoon();
@@ -187,11 +188,12 @@ export default class Noteweave extends Plugin {
   // ---------------------------------------------------------------- schema and pages
   async loadSchema() {
     let path: string;
+    let paths: InstancePaths;
     try {
-      const config = await this.app.vault.adapter.exists(".kb/config.json") ? readInstanceConfig(await this.app.vault.adapter.read(".kb/config.json")) : undefined;
-      this.evidenceRoot = config?.paths?.evidence ?? "evidence";
-      path = normalizePath(await instanceSchemaPath(
+      ({ paths } = await readVaultInstance(
         p => this.app.vault.adapter.read(p), p => this.app.vault.adapter.exists(p), this.app.vault.configDir));
+      this.evidenceRoot = paths.evidence;
+      path = normalizePath(paths.schema);
     } catch (error) {
       this.schema = null;
       this.schemaMtime = -1;
@@ -201,16 +203,16 @@ export default class Noteweave extends Plugin {
     }
     const stat = await this.app.vault.adapter.stat(path);
     const mtime = stat?.mtime ?? 0;
-    if (path === this.schemaPath && mtime === this.schemaMtime) return;
+    if (path === this.schemaPath && paths.bank === this.schemaBank && mtime === this.schemaMtime) return;
     this.schemaPath = path;
+    this.schemaBank = paths.bank;
     this.schemaMtime = mtime;
     this.schema = null;
     if (!stat) {
-      this.schemaError = "找不到实例词表：请检查 .kb/config.json 的 schema 路径";
+      this.schemaError = `找不到实例词表：请检查 ${INSTANCE_CONFIG} 的 schema 路径`;
     } else {
       try {
-        const config = await this.app.vault.adapter.exists(".kb/config.json") ? readInstanceConfig(await this.app.vault.adapter.read(".kb/config.json")) : undefined;
-        this.schema = loadRegistry(await this.app.vault.adapter.read(path), config?.paths?.bank ?? "bank").schema;
+        this.schema = loadRegistry(await this.app.vault.adapter.read(path), paths.bank).schema;
         this.schemaError = "";
       } catch (e) {
         this.schemaError = `实例词表读取失败：${(e as Error).message}`;
@@ -270,7 +272,7 @@ export default class Noteweave extends Plugin {
       applied = out !== null;
       return out ?? text;
     });
-    if (applied && !this.settings.actor) new Notice("Noteweave：在插件设置里填 actor（如 human:demo），generated.by 才会自动写好");
+    if (applied && !this.settings.actor) new Notice("Noteweaver：在插件设置里填 actor（如 human:demo），generated.by 才会自动写好");
   }
 
   async refresh() {
@@ -311,24 +313,24 @@ export default class Noteweave extends Plugin {
   private renderStatus() {
     const el = this.statusEl;
     el.empty();
-    el.removeClass("noteweave-error", "noteweave-warning");
+    el.removeClass("noteweaver-error", "noteweaver-warning");
     if (!this.schema) {
-      el.setText("Noteweave: 无 schema");
+      el.setText("Noteweaver: 无 schema");
       el.setAttr("aria-label", this.schemaError);
       return;
     }
     if (this.relationIssues.length) {
-      el.setText(`Noteweave: ${this.relationIssues.length} 项关系待处理`);
-      el.addClass("noteweave-error");
+      el.setText(`Noteweaver: ${this.relationIssues.length} 项关系待处理`);
+      el.addClass("noteweaver-error");
       el.setAttr("aria-label", "双向关系未同步，点开看详情");
       return;
     }
     if (!this.current) return;
     const errors = this.current.findings.filter((f) => f.severity === "error").length;
     const warnings = this.current.findings.length - errors;
-    el.setText(errors || warnings ? `Noteweave: ${errors} 错误 · ${warnings} 警告` : "Noteweave ✓");
-    if (errors) el.addClass("noteweave-error");
-    else if (warnings) el.addClass("noteweave-warning");
+    el.setText(errors || warnings ? `Noteweaver: ${errors} 错误 · ${warnings} 警告` : "Noteweaver ✓");
+    if (errors) el.addClass("noteweaver-error");
+    else if (warnings) el.addClass("noteweaver-warning");
     el.setAttr("aria-label", "frontmatter 检查（点开看详情）");
   }
 
@@ -350,7 +352,7 @@ export default class Noteweave extends Plugin {
     this.styleEl?.remove();
     this.styleEl = null;
     if (!this.schema) return;
-    this.styleEl = document.head.createEl("style", { attr: { id: "noteweave-icons" } });
+    this.styleEl = document.head.createEl("style", { attr: { id: "noteweaver-icons" } });
     this.styleEl.textContent = core.iconCss(this.schema, (id) => getIcon(id)?.outerHTML ?? null);
   }
 
@@ -362,15 +364,15 @@ export default class Noteweave extends Plugin {
     const block = core.claimsBlock(info.text);
     if (!block || block.error || block.fenceLine !== info.lineStart) return;
     const { rows, error } = core.claimRows(this.schema, block.yaml);
-    const box = createDiv({ cls: "noteweave-claims" });
-    if (error) box.createDiv({ cls: "noteweave-claims-error", text: error });
+    const box = createDiv({ cls: "noteweaver-claims" });
+    if (error) box.createDiv({ cls: "noteweaver-claims-error", text: error });
     if (rows.length) {
       const table = box.createEl("table");
       const head = table.createEl("thead").createEl("tr");
       for (const h of ["属性", "值", "适用范围", "生效", "取得方式", "证据", "核验", "状态"]) head.createEl("th", { text: h });
       const body = table.createEl("tbody");
       for (const r of rows) {
-        const tr = body.createEl("tr", { cls: r.state.startsWith("已撤回") ? "noteweave-claim-retracted" : "" });
+        const tr = body.createEl("tr", { cls: r.state.startsWith("已撤回") ? "noteweaver-claim-retracted" : "" });
         tr.setAttr("title", r.id);
         const attr = tr.createEl("td");
         if (r.label) attr.createSpan({ text: `${r.label} ` });
@@ -378,7 +380,7 @@ export default class Noteweave extends Plugin {
         for (const v of [r.value, r.scope, r.valid, r.basis, r.evidence, r.verified, r.state]) tr.createEl("td", { text: v });
       }
     }
-    const details = createEl("details", { cls: "noteweave-claims-yaml" });
+    const details = createEl("details", { cls: "noteweaver-claims-yaml" });
     details.createEl("summary", { text: "yaml 原文" });
     pre.replaceWith(box);
     box.appendChild(details);
@@ -445,7 +447,7 @@ class TextModal extends Modal {
 /** Source-mode suggestions for enum and relation keys inside the frontmatter. */
 class FrontmatterSuggest extends EditorSuggest<string> {
   private choices: string[] = [];
-  constructor(private plugin: Noteweave) { super(plugin.app); }
+  constructor(private plugin: Noteweaver) { super(plugin.app); }
 
   onTrigger(cursor: EditorPosition, editor: Editor, file: TFile | null): EditorSuggestTriggerInfo | null {
     const spec = file && this.plugin.specFor(file);
@@ -487,36 +489,36 @@ class FrontmatterSuggest extends EditorSuggest<string> {
 }
 
 class FindingsView extends ItemView {
-  constructor(leaf: WorkspaceLeaf, private plugin: Noteweave) { super(leaf); }
+  constructor(leaf: WorkspaceLeaf, private plugin: Noteweaver) { super(leaf); }
   getViewType() { return VIEW; }
-  getDisplayText() { return "Noteweave 检查"; }
+  getDisplayText() { return "Noteweaver 检查"; }
   getIcon() { return "shield-check"; }
   async onOpen() { this.render(); }
 
   render() {
     const el = this.contentEl;
     el.empty();
-    el.addClass("noteweave-view");
+    el.addClass("noteweaver-view");
     const p = this.plugin;
-    if (p.schemaError) el.createDiv({ cls: "noteweave-error", text: p.schemaError });
+    if (p.schemaError) el.createDiv({ cls: "noteweaver-error", text: p.schemaError });
     if (p.relationIssues.length) {
       el.createEl("h4", { text: "关系同步" });
       for (const issue of p.relationIssues) {
-        const link = el.createDiv({ cls: "noteweave-file" }).createEl("a", { text: issue.path });
+        const link = el.createDiv({ cls: "noteweaver-file" }).createEl("a", { text: issue.path });
         link.onclick = () => void this.app.workspace.openLinkText(issue.path, "", false);
         this.list(el, [issue]);
       }
     }
     el.createEl("h4", { text: "当前页" });
-    if (!p.current) el.createDiv({ cls: "noteweave-muted", text: "当前页不在 schema 绑定的目录里" });
+    if (!p.current) el.createDiv({ cls: "noteweaver-muted", text: "当前页不在 schema 绑定的目录里" });
     else this.list(el, p.current.findings);
-    const bar = el.createDiv({ cls: "noteweave-bar" });
+    const bar = el.createDiv({ cls: "noteweaver-bar" });
     bar.createEl("h4", { text: "全库" });
     bar.createEl("button", { text: p.all ? "重新检查" : "检查全库" }).onclick = () => void p.checkVault();
     if (p.all) {
-      el.createDiv({ cls: "noteweave-muted", text: `${p.all.size} 页有问题` });
+      el.createDiv({ cls: "noteweaver-muted", text: `${p.all.size} 页有问题` });
       for (const [path, findings] of [...p.all].sort(([a], [b]) => a.localeCompare(b))) {
-        const link = el.createDiv({ cls: "noteweave-file" }).createEl("a", { text: path });
+        const link = el.createDiv({ cls: "noteweaver-file" }).createEl("a", { text: path });
         link.onclick = () => void this.app.workspace.openLinkText(path, "", false);
         this.list(el, findings);
       }
@@ -525,20 +527,20 @@ class FindingsView extends ItemView {
 
   private list(el: HTMLElement, findings: core.Finding[]) {
     if (!findings.length) {
-      el.createDiv({ cls: "noteweave-muted", text: "frontmatter 没有问题" });
+      el.createDiv({ cls: "noteweaver-muted", text: "frontmatter 没有问题" });
       return;
     }
     const ul = el.createEl("ul");
     for (const f of findings) {
-      const li = ul.createEl("li", { cls: f.severity === "error" ? "noteweave-error" : "noteweave-warning" });
+      const li = ul.createEl("li", { cls: f.severity === "error" ? "noteweaver-error" : "noteweaver-warning" });
       li.createEl("code", { text: f.code });
       li.appendText(` ${f.message}`);
     }
   }
 }
 
-class NoteweaveSettings extends PluginSettingTab {
-  constructor(app: App, private plugin: Noteweave) { super(app, plugin); }
+class NoteweaverSettings extends PluginSettingTab {
+  constructor(app: App, private plugin: Noteweaver) { super(app, plugin); }
   display() {
     this.containerEl.empty();
     new Setting(this.containerEl).setName("actor")

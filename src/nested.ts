@@ -42,19 +42,19 @@ function object(value: unknown): value is Record<string, unknown> {
 
 function tree(parent: HTMLElement, value: unknown, seen = new Set<unknown>(), depth = 0) {
   if (value === null || typeof value !== "object") {
-    element(parent, "span", "noteweave-nested-scalar", scalar(value));
+    element(parent, "span", "noteweaver-nested-scalar", scalar(value));
     return;
   }
-  if (depth > 12 || seen.has(value)) { element(parent, "span", "noteweave-nested-muted", "请在源码中查看"); return; }
+  if (depth > 12 || seen.has(value)) { element(parent, "span", "noteweaver-nested-muted", "请在源码中查看"); return; }
   const next = new Set(seen).add(value);
   if (Array.isArray(value)) {
-    if (!value.length) { element(parent, "span", "noteweave-nested-muted", "暂无记录"); return; }
-    const list = element(parent, "ol", "noteweave-nested-list");
+    if (!value.length) { element(parent, "span", "noteweaver-nested-muted", "暂无记录"); return; }
+    const list = element(parent, "ol", "noteweaver-nested-list");
     for (const item of value) tree(element(list, "li", ""), item, next, depth + 1);
   } else {
     const entries = Object.entries(value);
-    if (!entries.length) { element(parent, "span", "noteweave-nested-muted", "未填写"); return; }
-    const list = element(parent, "dl", "noteweave-nested-fields");
+    if (!entries.length) { element(parent, "span", "noteweaver-nested-muted", "未填写"); return; }
+    const list = element(parent, "dl", "noteweaver-nested-fields");
     for (const [key, item] of entries) {
       element(list, "dt", "", key);
       tree(element(list, "dd", ""), item, next, depth + 1);
@@ -67,21 +67,21 @@ export function renderNested(
   lookup: EvidenceLookup, open: (link: EvidenceLink, event: MouseEvent) => void, evidenceRoot = "evidence",
 ) {
   root.replaceChildren();
-  root.classList.add("noteweave-nested");
+  root.classList.add("noteweaver-nested");
   root.setAttribute("aria-label", `${key}（只读）`);
   if (key !== "sources" || !Array.isArray(value)) { tree(root, value); return; }
-  if (!value.length) { element(root, "span", "noteweave-nested-muted", "暂无证据"); return; }
-  const details = element(root, "details", "noteweave-nested-sources");
+  if (!value.length) { element(root, "span", "noteweaver-nested-muted", "暂无证据"); return; }
+  const details = element(root, "details", "noteweaver-nested-sources");
   details.open = value.length <= 3;
   element(details, "summary", "", `${value.length} 份证据`);
-  const list = element(details, "ol", "noteweave-nested-list");
+  const list = element(details, "ol", "noteweaver-nested-list");
   for (const entry of value) {
-    const item = element(list, "li", "noteweave-nested-source");
+    const item = element(list, "li", "noteweaver-nested-source");
     if (!object(entry)) { tree(item, entry); continue; }
-    element(item, "code", "noteweave-nested-source-id", scalar(entry.id));
+    element(item, "code", "noteweaver-nested-source-id", scalar(entry.id));
     const link = evidenceLink(sourcePath, entry.resource, lookup, evidenceRoot);
     if (link) {
-      const a = element(item, "a", "internal-link noteweave-nested-evidence", link.title);
+      const a = element(item, "a", "internal-link noteweaver-nested-evidence", link.title);
       a.setAttribute("href", link.path);
       a.setAttribute("data-href", link.path);
       a.title = typeof entry.resource === "string" ? entry.resource : link.path;
@@ -93,8 +93,8 @@ export function renderNested(
       a.addEventListener("click", follow);
       a.addEventListener("auxclick", follow);
     } else {
-      element(item, "span", "noteweave-nested-missing", scalar(entry.resource));
-      element(item, "span", "noteweave-nested-muted", "（证据卡片不存在或路径无效）");
+      element(item, "span", "noteweaver-nested-missing", scalar(entry.resource));
+      element(item, "span", "noteweaver-nested-muted", "（证据卡片不存在或路径无效）");
     }
     const extra = Object.fromEntries(Object.entries(entry).filter(([k]) => k !== "id" && k !== "resource"));
     if (Object.keys(extra).length) tree(item, extra);

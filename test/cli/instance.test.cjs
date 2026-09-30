@@ -7,11 +7,11 @@ const { spawnSync } = require("node:child_process");
 const root = path.resolve(__dirname, "../.."),
   api = require("../../dist/runtime.cjs");
 function fixture(t) {
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "noteweave-cli-"));
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "noteweaver-cli-"));
   t.after(() => fs.rmSync(tmp, { recursive: true, force: true }));
   const vault = path.join(tmp, "research-notebook");
   fs.cpSync(path.join(root, "example-vault"), vault, { recursive: true });
-  const config = path.join(vault, ".kb/config.json");
+  const config = path.join(vault, ".noteweaver/config.json");
   const data = JSON.parse(fs.readFileSync(config, "utf8"));
   Object.assign(data, {
     repository_root: ".",
@@ -74,7 +74,7 @@ test("bank paths come from the selected instance", (t) => {
   const c = JSON.parse(fs.readFileSync(f.config));
   c.paths.bank = "notes";
   fs.writeFileSync(f.config, JSON.stringify(c));
-  const p = path.join(f.vault, ".kb/schema.json"),
+  const p = path.join(f.vault, ".noteweaver/schema.json"),
     s = JSON.parse(fs.readFileSync(p));
   s.directories = Object.fromEntries(
     Object.entries(s.directories).map(([k, v]) => [
@@ -92,7 +92,7 @@ test("competing schemas and escaping paths fail", (t) => {
     p = path.join(f.vault, ".obsidian");
   fs.mkdirSync(p, { recursive: true });
   fs.writeFileSync(path.join(p, "kb-schema.json"), "{}");
-  assert.match(f.cli("check").stderr, /two schema/);
+  assert.match(f.cli("check").stderr, /two schema/i);
   fs.unlinkSync(path.join(p, "kb-schema.json"));
   const c = JSON.parse(fs.readFileSync(f.config));
   c.paths.schema = "../schema.json";
@@ -103,7 +103,7 @@ test("competing schemas and escaping paths fail", (t) => {
 });
 test("review lists only open documents", (t) => {
   const f = fixture(t),
-    p = path.join(f.vault, ".kb/review");
+    p = path.join(f.vault, ".noteweaver/review");
   fs.mkdirSync(p, { recursive: true });
   for (const status of ["open", "accepted"])
     fs.writeFileSync(
@@ -160,7 +160,7 @@ test("runner refuses daily operations without --offline before reading or writin
 function evidenceFixture(t) {
   const f = fixture(t),
     model = path.join(f.vault, 'bank/entities/models/alpha-model.md'),
-    schema = path.join(f.vault, '.kb/schema.json');
+    schema = path.join(f.vault, '.noteweaver/schema.json');
   const raw = JSON.parse(fs.readFileSync(schema, 'utf8'));
   raw.formats.sources = 'wikilink';
   fs.writeFileSync(schema, JSON.stringify(raw));
@@ -254,7 +254,7 @@ test('directly installed context is self-contained and stays bound through a glo
   const config = JSON.parse(fs.readFileSync(f.config));
   config.repository_root = '..';
   fs.writeFileSync(f.config, JSON.stringify(config));
-  const skill = path.join(f.tmp, '.agents/skills/noteweave-query');
+  const skill = path.join(f.tmp, '.agents/skills/noteweaver-query');
   fs.mkdirSync(path.join(skill, 'scripts'), { recursive: true });
   fs.copyFileSync(path.join(root, 'dist/skill-context.cjs'), path.join(skill, 'scripts/context.cjs'));
   const personal = path.join(other.tmp, 'personal-query');
@@ -264,7 +264,7 @@ test('directly installed context is self-contained and stays bound through a glo
   let result = run();
   assert.equal(result.status, 0, result.stderr);
   assert.equal(JSON.parse(result.stdout).vault, fs.realpathSync(f.vault));
-  assert.equal(fs.existsSync(path.join(f.vault, '.kb/runtime')), false);
+  assert.equal(fs.existsSync(path.join(f.vault, '.noteweaver/runtime')), false);
   result = run('--vault', other.vault);
   assert.equal(result.status, 0, result.stderr);
   assert.equal(JSON.parse(result.stdout).vault, fs.realpathSync(other.vault));
@@ -277,7 +277,7 @@ test('directly installed context is self-contained and stays bound through a glo
 
 test('direct context refuses ambiguous installations and enforces the Obsidian prerequisite', (t) => {
   const f = fixture(t);
-  const skill = path.join(f.tmp, '.agents/skills/noteweave-query/scripts');
+  const skill = path.join(f.tmp, '.agents/skills/noteweaver-query/scripts');
   fs.mkdirSync(skill, { recursive: true });
   fs.copyFileSync(path.join(root, 'dist/skill-context.cjs'), path.join(skill, 'context.cjs'));
   const bin = path.join(f.tmp, 'bin');
@@ -295,4 +295,70 @@ test('direct context refuses ambiguous installations and enforces the Obsidian p
   result = run();
   assert.equal(result.status, 2);
   assert.match(result.stderr, /select one vault/);
+});
+
+test('filesystem and desktop resolve custom layout with identical defaults and validation', async (t) => {
+  const f = fixture(t), desktop = require('../../dist/validation.cjs');
+  const config = JSON.parse(fs.readFileSync(f.config));
+  for (const [key, destination] of Object.entries({ schema: 'rules/vocabulary.json', policies: 'rules/policy', review: 'pending', bank: 'notes', evidence: 'artifacts' })) {
+    const before = desktop.readInstanceConfig(JSON.stringify(config)).paths[key];
+    fs.mkdirSync(path.dirname(path.join(f.vault, destination)), { recursive: true });
+    if (fs.existsSync(path.join(f.vault, before))) fs.renameSync(path.join(f.vault, before), path.join(f.vault, destination));
+    config.paths[key] = destination;
+  }
+  fs.writeFileSync(f.config, JSON.stringify(config));
+  const instance = api.loadInstance(f.vault);
+  const resolved = await desktop.readVaultInstance(p => fs.promises.readFile(path.join(f.vault, p), 'utf8'),
+    p => Promise.resolve(fs.existsSync(path.join(f.vault, p))));
+  assert.deepEqual(instance.layout.paths, resolved.paths);
+  assert.deepEqual(instance.layout.config.paths, resolved.config.paths);
+  const schemaFile = path.join(f.vault, config.paths.schema);
+  const schema = JSON.parse(fs.readFileSync(schemaFile));
+  schema.directories = Object.fromEntries(Object.entries(schema.directories).map(([key, value]) => [key.replace('bank/', 'notes/'), value]));
+  fs.writeFileSync(schemaFile, JSON.stringify(schema));
+  assert.equal(f.cli('index').status, 0);
+  const checked = f.cli('check', '--json');
+  assert.equal(checked.status, 0, checked.stdout + checked.stderr);
+  for (const field of Object.keys(config.paths)) {
+    const invalid = { ...config, paths: { ...config.paths, [field]: 'a/../elsewhere' } };
+    fs.writeFileSync(f.config, JSON.stringify(invalid));
+    assert.throws(() => api.loadInstance(f.vault), /invalid instance path/);
+    assert.throws(() => desktop.readInstanceConfig(JSON.stringify(invalid)), /invalid instance path/);
+  }
+  fs.writeFileSync(f.config, JSON.stringify(config));
+  fs.symlinkSync(f.tmp, path.join(f.vault, 'outside'));
+  config.paths.review = 'outside/review';
+  fs.writeFileSync(f.config, JSON.stringify(config));
+  assert.throws(() => api.loadInstance(f.vault), /leaves vault/);
+});
+
+test('discovery stops at invalid, old or ambiguous instances instead of finding another ancestor', (t) => {
+  const f = fixture(t);
+  fs.writeFileSync(f.config, '{"version":999}');
+  assert.throws(() => api.discover(path.join(f.vault, 'bank')), /unsupported/);
+  fs.renameSync(path.join(f.vault, '.noteweaver'), path.join(f.vault, '.kb'));
+  assert.throws(() => api.loadInstance(f.vault), /Migrate/);
+  assert.throws(() => api.discover(path.join(f.vault, 'bank')), /Migrate/);
+  fs.cpSync(f.vault, path.join(f.tmp, 'other-vault'), { recursive: true });
+  assert.throws(() => api.discover(f.tmp), /select one vault/);
+});
+
+test("plugin cache uses explicit install binding and explicit vault overrides it", t => {
+  const first = fixture(t), second = fixture(t);
+  const plugin = path.join(first.tmp, "cache", "noteweaver");
+  const helper = path.join(plugin, "skills", "noteweaver-query", "scripts", "context.cjs");
+  fs.mkdirSync(path.dirname(helper), {recursive:true});
+  fs.copyFileSync(path.join(root,"dist/skill-context.cjs"), helper);
+  fs.writeFileSync(path.join(plugin,"plugin.json"), '{"name":"noteweaver"}');
+  fs.writeFileSync(path.join(plugin,"noteweaver-instance.json"), JSON.stringify({version:1,vault:first.vault}));
+  let r = spawnSync(process.execPath,[helper],{cwd:second.vault,encoding:"utf8"});
+  assert.equal(r.status,0,r.stderr); assert.equal(JSON.parse(r.stdout).vault,first.vault);
+  r = spawnSync(process.execPath,[helper,"--vault",second.vault],{cwd:first.vault,encoding:"utf8"});
+  assert.equal(r.status,0,r.stderr); assert.equal(JSON.parse(r.stdout).vault,second.vault);
+  fs.unlinkSync(path.join(plugin,"noteweaver-instance.json"));
+  r = spawnSync(process.execPath,[helper],{cwd:second.vault,encoding:"utf8"});
+  assert.equal(r.status,0,r.stderr); assert.equal(JSON.parse(r.stdout).vault,second.vault);
+  fs.writeFileSync(path.join(plugin,"noteweaver-instance.json"), '{"version":1,"vault":"relative"}');
+  r = spawnSync(process.execPath,[helper],{cwd:second.vault,encoding:"utf8"});
+  assert.equal(r.status,2); assert.match(r.stderr,/invalid.*binding/);
 });

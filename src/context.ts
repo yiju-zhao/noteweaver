@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import { hasInstance } from "./instance";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { loadInstance, discover, Instance, realPath } from "./bank/node";
@@ -11,7 +12,17 @@ export function main(args: string[], scriptPath: string) {
       instance = loadInstance(args[1]);
     } else {
       for (let p = path.dirname(realPath(scriptPath)); ; p = path.dirname(p)) {
-        if (fs.existsSync(path.join(p, ".kb/config.json"))) {
+        const binding = path.join(p, "noteweaver-instance.json");
+        if (fs.existsSync(binding)) {
+          const data = JSON.parse(fs.readFileSync(binding, "utf8"));
+          if (data.version !== 1 || typeof data.vault !== "string" || !path.isAbsolute(data.vault))
+            throw new Error("invalid Noteweaver instance binding");
+          instance = loadInstance(data.vault);
+          break;
+        }
+        // A distributed plugin is reusable. Its cache parent is not an instance.
+        if (fs.existsSync(path.join(p, "plugin.json")) || fs.existsSync(path.join(p, ".codex-plugin/plugin.json"))) break;
+        if (hasInstance(relative => fs.existsSync(path.join(p, relative)))) {
           instance = loadInstance(p);
           break;
         }
@@ -40,7 +51,8 @@ export function main(args: string[], scriptPath: string) {
     }
     console.log(
       JSON.stringify(
-        { vault, repository: root, config: layout.config },
+        { vault, repository: root, config: layout.config,
+          paths: Object.fromEntries(Object.entries(layout.paths).map(([key, value]) => [key, path.join(root, value)])) },
         null,
         2,
       ),

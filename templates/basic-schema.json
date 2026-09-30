@@ -1,0 +1,245 @@
+{
+  "version": 3,
+  "base_required": [
+    "type",
+    "title",
+    "description",
+    "generated"
+  ],
+  "special_values": [
+    "unknown",
+    "none"
+  ],
+  "formats": {
+    "quantity": "^[+-]?(\\d+(\\.\\d*)?|\\.\\d+)([eE][+-]?\\d+)?[KMBT]?$",
+    "time": [
+      "^\\d{4}(?:-(?:0[1-9]|1[0-2])(?:-(?:0[1-9]|[12]\\d|3[01]))?)?$",
+      "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}(:\\d{2}(\\.\\d+)?)?(Z|[+-]\\d{2}:\\d{2})$"
+    ],
+    "wikilink": "^\\[\\[([^\\[\\]]+)\\]\\]$",
+    "sources": "wikilink"
+  },
+  "kinds": {
+    "entity": {
+      "directory": "entities",
+      "label": "entity",
+      "meaning": "A concrete identifiable object",
+      "not_for": "Other kinds",
+      "examples": "",
+      "jev": {
+        "what": "A concrete identifiable object",
+        "not_for": "Other kinds",
+        "examples": []
+      }
+    },
+    "concept": {
+      "directory": "concepts",
+      "label": "concept",
+      "meaning": "An abstract idea or phenomenon",
+      "not_for": "Other kinds",
+      "examples": "",
+      "jev": {
+        "what": "An abstract idea or phenomenon",
+        "not_for": "Other kinds",
+        "examples": []
+      }
+    },
+    "event": {
+      "directory": "events",
+      "label": "event",
+      "meaning": "A bounded occurrence",
+      "not_for": "Other kinds",
+      "examples": "",
+      "jev": {
+        "what": "A bounded occurrence",
+        "not_for": "Other kinds",
+        "examples": []
+      }
+    },
+    "method": {
+      "directory": "methods",
+      "label": "method",
+      "meaning": "A repeatable procedure",
+      "not_for": "Other kinds",
+      "examples": "",
+      "jev": {
+        "what": "A repeatable procedure",
+        "not_for": "Other kinds",
+        "examples": []
+      }
+    },
+    "analysis": {
+      "directory": "analyses",
+      "label": "analysis",
+      "meaning": "A sourced answer synthesizing evidence",
+      "not_for": "Other kinds",
+      "examples": "",
+      "jev": {
+        "what": "A sourced answer synthesizing evidence",
+        "not_for": "Other kinds",
+        "examples": []
+      }
+    },
+    "question": {
+      "directory": "questions",
+      "label": "question",
+      "meaning": "An unresolved research question",
+      "not_for": "Other kinds",
+      "examples": "",
+      "jev": {
+        "what": "An unresolved research question",
+        "not_for": "Other kinds",
+        "examples": []
+      }
+    },
+    "topic": {
+      "directory": "topics",
+      "label": "topic",
+      "meaning": "Navigation across related pages",
+      "not_for": "Other kinds",
+      "examples": "",
+      "jev": {
+        "what": "Navigation across related pages",
+        "not_for": "Other kinds",
+        "examples": []
+      }
+    }
+  },
+  "scope_keys": {},
+  "units": {},
+  "jev": {
+    "predicate": {
+      "primitive": "choice",
+      "question": {
+        "en": "Select the applicable predicate",
+        "focus_en": "Use only the supplied evidence"
+      },
+      "escape_value": "none",
+      "order": [
+        "none"
+      ],
+      "extra_values": {
+        "none": {
+          "what": "No matching entry",
+          "not_for": "Other entries",
+          "examples": []
+        }
+      }
+    },
+    "attribute": {
+      "primitive": "choice",
+      "question": {
+        "en": "Select the applicable attribute",
+        "focus_en": "Use only the supplied evidence"
+      },
+      "escape_value": "none",
+      "order": [
+        "none"
+      ],
+      "extra_values": {
+        "none": {
+          "what": "No matching entry",
+          "not_for": "Other entries",
+          "examples": []
+        }
+      }
+    },
+    "kind": {
+      "primitive": "choice",
+      "question": {
+        "en": "Select the applicable kind",
+        "focus_en": "Use only the supplied evidence"
+      },
+      "escape_value": "none",
+      "order": [
+        "entity",
+        "concept",
+        "event",
+        "method",
+        "analysis",
+        "question",
+        "topic",
+        "none"
+      ],
+      "extra_values": {
+        "none": {
+          "what": "No matching entry",
+          "not_for": "Other entries",
+          "examples": []
+        }
+      }
+    },
+    "entity-class": {
+      "primitive": "choice",
+      "question": {
+        "en": "Select the applicable entity-class",
+        "focus_en": "Use only the supplied evidence"
+      },
+      "escape_value": "none",
+      "order": [
+        "object",
+        "none"
+      ],
+      "extra_values": {
+        "none": {
+          "what": "No matching entry",
+          "not_for": "Other entries",
+          "examples": []
+        }
+      }
+    }
+  },
+  "enums": {},
+  "attributes": {},
+  "predicates": {},
+  "directories": {
+    "bank/concepts": {
+      "type": "concept",
+      "class": null,
+      "required": [],
+      "icon": "file-text"
+    },
+    "bank/events": {
+      "type": "event",
+      "class": null,
+      "required": [],
+      "icon": "file-text"
+    },
+    "bank/methods": {
+      "type": "method",
+      "class": null,
+      "required": [],
+      "icon": "file-text"
+    },
+    "bank/analyses": {
+      "type": "analysis",
+      "class": null,
+      "required": [],
+      "icon": "file-text"
+    },
+    "bank/questions": {
+      "type": "question",
+      "class": null,
+      "required": [],
+      "icon": "file-text"
+    },
+    "bank/topics": {
+      "type": "topic",
+      "class": null,
+      "required": [],
+      "icon": "file-text"
+    },
+    "bank/entities/objects": {
+      "type": "entity",
+      "class": "object",
+      "required": [],
+      "icon": "box",
+      "meaning": "An identifiable object",
+      "jev": {
+        "what": "An identifiable object",
+        "not_for": "Abstract ideas",
+        "examples": []
+      }
+    }
+  }
+}

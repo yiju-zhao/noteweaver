@@ -19,10 +19,13 @@ jobs:
       - run: npm test
       - run: npm run build
       - run: npm run test:cli
+      - run: python3 -m unittest discover -s test -p 'test_*.py'
+      - run: python3 -m unittest discover -s skills/noteweaver-arxiv/tests
       - name: Checksums
         working-directory: dist
-        run: sha256sum main.js manifest.json styles.css validation.cjs runtime.zip > SHA256SUMS
+        run: sha256sum -c SHA256SUMS
+      - run: node scripts/release-lock.mjs
       - name: Create draft release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" dist/main.js dist/manifest.json dist/styles.css dist/validation.cjs dist/runtime.zip dist/SHA256SUMS THIRD_PARTY_NOTICES.md --draft --verify-tag --generate-notes
+        run: gh release create "$GITHUB_REF_NAME" dist/main.js dist/manifest.json dist/styles.css dist/validation.cjs dist/runtime.zip dist/agent-plugin.zip dist/installer.py dist/tools.lock.json dist/SHA256SUMS THIRD_PARTY_NOTICES.md --draft --verify-tag --generate-notes
