@@ -8,8 +8,11 @@ function walk(dir) {
   for (const e of readdirSync(dir, { withFileTypes: true })) {
     const p = join(dir, e.name);
     if (e.isDirectory()) walk(p);
-    else
-      entries.push([relative(root, p).replaceAll("\\", "/"), readFileSync(p)]);
+    else {
+      const name = relative(root, p).replaceAll("\\", "/");
+      entries.push([name, readFileSync(name === "skills/noteweave-query/scripts/context.cjs"
+        ? join(root, "dist/skill-context.cjs") : p)]);
+    }
   }
 }
 walk(join(root, "skills"));

@@ -15,6 +15,13 @@ export function main(args: string[], scriptPath: string) {
           instance = loadInstance(p);
           break;
         }
+        if ([".agents", ".claude"].includes(path.basename(p))) {
+          // Installed skills belong to this repository even when invoked through
+          // a personal symlink from a different working directory. Fail on an
+          // ambiguous/invalid instance instead of silently selecting the caller.
+          instance = loadInstance(path.dirname(p));
+          break;
+        }
         if (path.dirname(p) === p) break;
       }
       instance ??= discover(process.cwd());

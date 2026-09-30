@@ -43,14 +43,18 @@ The `review` operation lists documents, not the number of decisions contained in
 ## Install runtime and skills
 
 Download the same release's `runtime.zip` and verify its release SHA-256 before
-extracting into `.kb/runtime/`. Install Node.js 20+ for the offline runner and context helper; installed JavaScript is already bundled, so npm installation is unnecessary.
+extracting. Install the archive's `skills/<name>/` directories directly into
+the repository's `.agents/skills/<name>/`; install the other entries into the
+vault's `.kb/runtime/`. Install Node.js 20+ for the offline runner and context helper;
+installed JavaScript is already bundled, so npm installation is unnecessary.
 Use `runAutomation({operation:"info",vault:"<absolute vault path>"})` through Obsidian `eval` to verify the selected instance.
 Ignore `.kb/runtime/` and downloaded archives in the vault repository; commit the
 release version and hashes in that repository's lock file.
 
-Expose each installed skill with a relative symlink under the agent's discovery
-directory, commonly `.agents/skills/`. Claude Code can use `.claude/skills/` links
-to the same entries. Maintain generic skill source in this repository's `skills/`,
+Ignore the three installed `.agents/skills/noteweave-{query,research,write}/`
+directories; the pinned release and installer recreate them. Each is a real skill
+directory, with a self-contained context script. Claude Code can use
+`.claude/skills/` links to the same entries. Maintain generic skill source in this repository's `skills/`,
 and change instance policy in the vault. Tool-specific or third-party skills stay
 with their own owners; `research_skills` names the available integrations.
 

@@ -20,6 +20,6 @@ await esbuild.build({
 });
 for (const file of ["manifest.json", "styles.css"]) copyFileSync(join(here, file), join(out, file));
 
-for (const [entry, file] of [["src/cli-entry.ts", "cli.cjs"], ["src/context.ts", "context.cjs"], ["src/bank/node.ts", "runtime.cjs"]]) {
+for (const [entry, file] of [["src/cli-entry.ts", "cli.cjs"], ["src/context.ts", "context.cjs"], ["src/bank/node.ts", "runtime.cjs"], ["skills/noteweave-query/scripts/context.cjs", "skill-context.cjs"]]) {
   await esbuild.build({ entryPoints: [join(here, entry)], outfile: join(out, file), bundle: true, platform: "node", format: "cjs", target: "node20", banner, logLevel: "info" });
 }

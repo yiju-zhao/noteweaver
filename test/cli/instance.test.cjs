@@ -248,3 +248,51 @@ test('native source validation guards IDs, targets, footnotes, claims and orphan
   r = f.cli('check', '--json');
   assert.ok(JSON.parse(r.stdout).findings.some((x) => x.code === 'evidence-unreferenced'), r.stdout);
 });
+
+test('directly installed context is self-contained and stays bound through a global link', (t) => {
+  const f = fixture(t), other = fixture(t);
+  const config = JSON.parse(fs.readFileSync(f.config));
+  config.repository_root = '..';
+  fs.writeFileSync(f.config, JSON.stringify(config));
+  const skill = path.join(f.tmp, '.agents/skills/noteweave-query');
+  fs.mkdirSync(path.join(skill, 'scripts'), { recursive: true });
+  fs.copyFileSync(path.join(root, 'dist/skill-context.cjs'), path.join(skill, 'scripts/context.cjs'));
+  const personal = path.join(other.tmp, 'personal-query');
+  fs.symlinkSync(skill, personal, 'dir');
+  const run = (...args) => spawnSync(process.execPath, [path.join(personal, 'scripts/context.cjs'), ...args],
+    { cwd: other.vault, encoding: 'utf8' });
+  let result = run();
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(JSON.parse(result.stdout).vault, fs.realpathSync(f.vault));
+  assert.equal(fs.existsSync(path.join(f.vault, '.kb/runtime')), false);
+  result = run('--vault', other.vault);
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(JSON.parse(result.stdout).vault, fs.realpathSync(other.vault));
+  // An invalid bound instance must not fall back to the valid working directory.
+  fs.writeFileSync(f.config, '{"version":999}');
+  result = run();
+  assert.equal(result.status, 2);
+  assert.match(result.stderr, /unsupported/);
+});
+
+test('direct context refuses ambiguous installations and enforces the Obsidian prerequisite', (t) => {
+  const f = fixture(t);
+  const skill = path.join(f.tmp, '.agents/skills/noteweave-query/scripts');
+  fs.mkdirSync(skill, { recursive: true });
+  fs.copyFileSync(path.join(root, 'dist/skill-context.cjs'), path.join(skill, 'context.cjs'));
+  const bin = path.join(f.tmp, 'bin');
+  fs.mkdirSync(bin);
+  fs.writeFileSync(path.join(bin, 'obsidian'), '#!/bin/sh\nprintf "/another/vault\\n"\n', { mode: 0o755 });
+  const config = JSON.parse(fs.readFileSync(f.config));
+  config.require_obsidian = true;
+  fs.writeFileSync(f.config, JSON.stringify(config));
+  const run = () => spawnSync(process.execPath, [path.join(skill, 'context.cjs')],
+    { cwd: f.vault, encoding: 'utf8', env: { ...process.env, PATH: bin } });
+  let result = run();
+  assert.equal(result.status, 2);
+  assert.match(result.stderr, /Open Obsidian/);
+  fs.cpSync(f.vault, path.join(f.tmp, 'second-vault'), { recursive: true });
+  result = run();
+  assert.equal(result.status, 2);
+  assert.match(result.stderr, /select one vault/);
+});

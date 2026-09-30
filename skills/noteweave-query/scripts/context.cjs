@@ -1,2 +1,3 @@
 #!/usr/bin/env node
-process.exitCode = require('../../../cli/context.cjs').main(process.argv.slice(2), __filename);
+// Bundled by the release build; the installed script has no sibling runtime dependency.
+process.exitCode = require('../../../src/context.ts').main(process.argv.slice(2), __filename);
