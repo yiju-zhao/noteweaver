@@ -4,6 +4,7 @@
 import { Keymap, Notice, Plugin, setIcon, TFile } from "obsidian";
 import { readFrontmatter } from "./core";
 import { evidencePath, NESTED_KEYS, renderNested, type EvidenceLink } from "./nested";
+import { nativeSources } from "./sources";
 
 const PROPERTY_ICONS: Record<string, string> = {
   generated: "history", sources: "book-open", verified: "badge-check",
@@ -47,7 +48,9 @@ export function installReadonlyProperties(plugin: Plugin, isBankPage: (file: TFi
     const original = widget.render;
     const wrapped: Widget["render"] = function (this: Widget, el, value, ctx) {
       const file = ctx.sourcePath && plugin.app.vault.getAbstractFileByPath(ctx.sourcePath);
-      if (!active || !ctx.key || !NESTED_KEYS.has(ctx.key) || !(file instanceof TFile) || !isBankPage(file)) {
+      const native = ctx.key === "sources" && file instanceof TFile &&
+        nativeSources(plugin.app.metadataCache.getFileCache(file)?.frontmatter?.sources);
+      if (!active || !ctx.key || !NESTED_KEYS.has(ctx.key) || native || !(file instanceof TFile) || !isBankPage(file)) {
         pending.delete(el);
         if (el.classList.contains("kb-nested")) {
           el.classList.remove("kb-nested");

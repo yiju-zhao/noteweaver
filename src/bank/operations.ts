@@ -3,8 +3,9 @@ import { loadRegistry } from "./registry";
 import { Checker, refs } from "./check";
 import { renderIndexes, renderSchema } from "./render";
 import { lift } from "./lift";
+import { migrateSources } from "./sources";
 export interface Request {
-  operation: "check" | "index" | "schema" | "lift" | "refs" | "info" | "review";
+  operation: "check" | "index" | "schema" | "lift" | "sources" | "refs" | "info" | "review";
   base?: string;
   name?: string;
   check?: boolean;
@@ -101,6 +102,18 @@ export function execute(
         stats.conflicts.length ? 1 : 0,
         request.dryRun ? [] : changes,
       );
+    }
+    case "sources": {
+      if (reg.data.formats.sources !== "wikilink")
+        throw new Error("set schema formats.sources to wikilink before migrating");
+      // Existing instances may contain both formats while resuming an interrupted
+      // migration. Validate IDs, cards, footnotes and claims before any write.
+      const legacy = { ...reg, data: { ...reg.data, formats: { ...reg.data.formats, sources: undefined } } };
+      const errors = new Checker(repo, legacy).run().filter((f) => f.severity === "error");
+      if (errors.length) return done({ pages: 0, errors }, 1);
+      const changes = migrateSources(repo, now);
+      return done({ pages: changes.length, paths: changes.map((p) => p.path), errors: [] }, 0,
+        request.dryRun ? [] : changes);
     }
     default:
       throw new Error("unknown Noteweave operation");

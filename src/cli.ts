@@ -23,11 +23,11 @@ export function parseArgs(args: string[]) {
     else throw new Error(`unexpected argument ${a}`);
   }
   if (
-    !["check", "index", "schema", "lift", "refs", "info", "review"].includes(
+    !["check", "index", "schema", "lift", "sources", "refs", "info", "review"].includes(
       operation ?? "",
     )
   )
-    throw new Error("choose check, index, schema, lift, refs, info, or review");
+    throw new Error("choose check, index, schema, lift, sources, refs, info, or review");
   request.operation = operation as Request["operation"];
   return { root, offline, json, request };
 }
@@ -63,7 +63,7 @@ export function live(instance: Instance, request: Request): Result {
 export function main(args: string[]) {
   if (args.includes("--help") || !args.length) {
     console.log(
-      "Noteweave: kb [--root VAULT] [--offline] <check|index|schema|refs|lift|info|review> [--json] [--base REV] [--check] [--dry-run]\nNormal commands connect to Obsidian. --offline explicitly selects filesystem execution for CI and isolated fixtures.",
+      "Noteweave: kb [--root VAULT] [--offline] <check|index|schema|refs|lift|sources|info|review> [--json] [--base REV] [--check] [--dry-run]\nNormal commands connect to Obsidian. --offline explicitly selects filesystem execution for CI and isolated fixtures.",
     );
     return 0;
   }
@@ -101,6 +101,9 @@ export function main(args: string[]) {
       console.log(
         `kb check: ${result.data.pages} pages, ${result.data.claims} claims, ${result.data.cards} evidence cards: ${result.data.errors} errors, ${result.data.warnings} warnings`,
       );
+    } else if (request.operation === "sources") {
+      console.log(`kb sources: ${request.dryRun ? "would migrate" : "migrated"} ${result.data.pages} pages`);
+      for (const f of result.data.errors) console.log(`${f.path}: [${f.code}] ${f.message}`);
     } else if (request.operation === "lift") {
       const s = result.data;
       console.log(
@@ -126,4 +129,3 @@ export function main(args: string[]) {
     return 2;
   }
 }
-

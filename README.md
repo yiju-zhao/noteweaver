@@ -39,10 +39,10 @@ optional validation bundle, not for installing the plugin in Obsidian.
 - Edit either side of a declared relation. The plugin synchronizes its inverse,
   including removals, renames, and deletions. Conflicting relations pause writes
   and appear in the findings panel. **同步全库双向关系** runs reconciliation explicitly.
-- `generated`, `verified`, and `sources` are displayed read-only in Properties.
-  Their icons distinguish generation history, verification and source evidence.
-  Evidence links resolve to exact `source`/`record` card paths. Edit these values in
-  source mode to preserve YAML formatting and numeric precision.
+- `sources` uses native Properties lists when its entries are wikilinks. The link
+  alias carries the page-local citation ID; the full path identifies a source or
+  record card. `generated`, `verified`, and legacy source objects remain read-only
+  nested displays. Edit precise YAML in source mode to retain its lexical values.
 - A YAML block under `## 断言` is rendered as a claims table in reading view.
 
 The current interface uses Chinese labels. This release targets knowledge bases

@@ -32,6 +32,7 @@ import {
 } from "./model";
 import { renderIndexes, staleSchema } from "./render";
 import { liftable, unscopedDirect } from "./lift";
+import { sourceEntry, SourceError } from "./sources";
 export interface Finding {
   code: string;
   severity: "error" | "warning";
@@ -250,25 +251,17 @@ export class Checker {
       raw = [];
     }
     for (const s of raw) {
-      if (!object(s) || !s.id || !s.resource) {
-        this.add(
-          "sources",
-          p.rel,
-          "every sources entry needs id and resource",
-          1,
-        );
+      let entry: { id: string; target: string };
+      try {
+        entry = sourceEntry(this.repo, p, s, this.reg.data.formats.sources === "wikilink");
+      } catch (error) {
+        if (!(error instanceof SourceError)) throw error;
+        this.add(error.code, p.rel, error.message, 1);
         continue;
       }
-      const sid = s.id;
-      if (!SLUG.test(sid))
-        this.add("sources", p.rel, `source id '${sid}' must use [a-z0-9-]`, 1);
+      const { id: sid, target } = entry;
       if (sid in sources)
         this.add("sources", p.rel, `source id '${sid}' appears twice`, 1);
-      if (typeof s.resource !== "string") {
-        this.add("source-resource", p.rel, "source resource must be a path", 1);
-        continue;
-      }
-      const target = resolveLink(p.path, s.resource);
       sources[sid] = target;
       if (!inside(target, this.repo.evidence))
         this.add(

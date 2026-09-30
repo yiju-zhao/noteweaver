@@ -27,7 +27,7 @@ export interface KbSchema {
   version: number;
   base_required: string[];
   special_values: string[];
-  formats: { quantity: string; time: string[]; wikilink: string };
+  formats: { quantity: string; time: string[]; wikilink: string; sources?: "wikilink" };
   vocabulary: Record<string, string>;
   directories: Record<string, DirSpec>;
 }
@@ -52,6 +52,8 @@ export function readSchema(text: string): KbSchema {
   const raw: VocabularySchema = JSON.parse(text);
   if (parseDocument(text, { schema: "json", uniqueKeys: true }).errors.length) throw new Error("词表 JSON 含重复键或解析错误");
   if (raw?.version !== 3) throw new Error(`不认识的版本 ${raw?.version}，请更新插件`);
+  if (raw.formats?.sources !== undefined && raw.formats.sources !== "wikilink")
+    throw new Error("formats.sources must be wikilink when specified");
   for (const key of ["kinds", "directories", "predicates", "attributes", "scope_keys", "units", "enums", "jev", "formats"]) {
     const value = (raw as unknown as Record<string, unknown>)[key];
     if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error(`缺少词表节 ${key}`);

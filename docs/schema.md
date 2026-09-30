@@ -17,7 +17,7 @@ explained in [instances](instances.md).
 | `attributes` | Property definitions with labels, allowed subjects, value type and placement. |
 | `predicates` | Page relations with explicit inverse names and cardinalities. |
 | `enums` | Named mappings of allowed values to descriptions. |
-| `formats` | Regular-expression strings for `quantity`, `time` (a list), and `wikilink`. |
+| `formats` | Regular-expression strings for `quantity`, `time` (a list), and `wikilink`; optional `sources: "wikilink"` selects native evidence properties. |
 | `kinds`, `scope_keys`, `units`, `jev` | Required object sections for vocabulary metadata. The CLI requires the metadata used by rule-table rendering. |
 
 Extra metadata can describe terms for people or other tools. The example contains synthetic metadata, with no team vocabulary or evidence.
@@ -51,9 +51,30 @@ multiple targets. Special values cannot be mixed with actual targets.
 ## Evidence and claims
 
 The evidence convention is `<evidence-root>/sources/<group>/<card>.md` or
-`<evidence-root>/records/<group>/<card>.md`; `paths.evidence` defaults to `evidence`. A source entry contains `id` and `resource`;
-the latter is a relative Markdown path from the containing page. The target must
-have `type: source` or `type: record` for the plugin to present a navigable title.
+`<evidence-root>/records/<group>/<card>.md`; `paths.evidence` defaults to `evidence`.
+Set `formats.sources` to `"wikilink"` to require a native list:
+
+```yaml
+sources:
+  - "[[evidence/sources/example.org/paper.pdf.md|paper]]"
+```
+
+The path is exact and vault-relative, including the card's `.md` extension;
+the display alias is the page-local citation ID (`[a-z0-9]+(-[a-z0-9]+)*`).
+Keep it stable: footnotes `[^paper]` and Claim `evidence: [{source: paper, at: L1}]`
+reference this ID. The target must be a `source` or `record` card, and footnote
+definitions must link to the same card. Duplicate IDs, fragments, URLs,
+relative `..` segments and missing aliases are rejected. Backlinks are computed
+by Obsidian, never persisted into immutable evidence cards.
+
+Instances without `formats.sources` retain compatibility with legacy
+`{id, resource}` entries. After setting the format, preview `kb sources --dry-run`
+and run `kb sources` to migrate through Obsidian. Migration validates the whole
+bank before writing, changes only `sources` and `generated`, rejects extra source
+metadata, and is idempotent. Update the instance's change log afterwards.
+As with other multi-file operations, concurrent edits stop remaining writes;
+successfully applied files can be resumed safely. It does not change Claims,
+footnotes, original evidence bytes or card metadata.
 
 `generated` and `verified` are read-only nested displays. Claims use the first
 YAML fence following `## 断言`; values are parsed as literal strings. These

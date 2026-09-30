@@ -250,7 +250,7 @@ export function applyOffline(instance: Instance, changes: Patch[]) {
 export function runOffline(instance: Instance, request: Request): Result {
   const repo = snapshot(
       instance,
-      request.operation === "check" ? (request.base ?? "HEAD") : undefined,
+      ["check", "sources"].includes(request.operation) ? (request.base ?? "HEAD") : undefined,
     ),
     result = execute(repo, request);
   applyOffline(instance, result.changes);

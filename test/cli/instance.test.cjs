@@ -179,3 +179,95 @@ test("live CLI passes structured requests and preserves findings exit codes", (t
   assert.equal(r.status, 1, r.stderr);
   assert.equal(JSON.parse(r.stdout).findings[0].code, "claim-immutable");
 });
+
+function evidenceFixture(t) {
+  const f = fixture(t),
+    model = path.join(f.vault, 'bank/entities/models/alpha-model.md'),
+    schema = path.join(f.vault, '.kb/schema.json');
+  const raw = JSON.parse(fs.readFileSync(schema, 'utf8'));
+  raw.formats.sources = 'wikilink';
+  fs.writeFileSync(schema, JSON.stringify(raw));
+  const cards = [
+    ['sources/example.org/readme.md', 'type: source\ntitle: Example source\npublisher: Example\ngrade: official\ncaptured_at: 2026-09-29T12:00:00Z'],
+    ['records/2026-09/readme.md', 'type: record\ntitle: Example record\nby: process:test\nobserved_at: 2026-09-29T12:00:00Z'],
+  ];
+  const crypto = require('node:crypto');
+  for (const [rel, metadata] of cards) {
+    const target = path.join(f.vault, 'evidence', rel), original = 'A precise result: 7.00.\n';
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+    fs.writeFileSync(target, original);
+    fs.writeFileSync(target + '.md', `---\n${metadata}\nsha256: ${crypto.createHash('sha256').update(original).digest('hex')}\n---\n`);
+  }
+  const before = fs.readFileSync(model, 'utf8').replace('sources: []',
+    'sources:\n  - id: paper\n    resource: ../../../evidence/sources/example.org/readme.md.md\n  - id: run\n    resource: ../../../evidence/records/2026-09/readme.md.md') +
+    '\nResult.[^paper][^run]\n\n## 断言\n\n```yaml\n- id: alpha-model--tpf\n  attribute: tpf\n  value: "7.00"\n  unit: token/forward\n  basis: direct\n  evidence:\n    - {source: run, at: L1}\n```\n\n' +
+    '[^paper]: [Paper](../../../evidence/sources/example.org/readme.md.md)\n' +
+    '[^run]: [Run](../../../evidence/records/2026-09/readme.md.md)\n';
+  fs.writeFileSync(model, before);
+  fs.appendFileSync(path.join(f.vault, 'bank/log.md'), '\n* Update: add synthetic evidence citations.\n');
+  return { ...f, model, before };
+}
+
+test('native migration previews, preserves claims/precision/cards and is idempotent', (t) => {
+  const f = evidenceFixture(t);
+  let r = f.cli('sources', '--dry-run', '--json');
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  assert.equal(JSON.parse(r.stdout).pages, 1);
+  assert.equal(fs.readFileSync(f.model, 'utf8'), f.before);
+  const card = path.join(f.vault, 'evidence/sources/example.org/readme.md.md'), cardBefore = fs.readFileSync(card);
+  r = f.cli('sources', '--json');
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  const after = fs.readFileSync(f.model, 'utf8');
+  assert.match(after, /sources:\n  - "\[\[evidence\/sources\/example.org\/readme.md.md\|paper\]\]"/);
+  assert.match(after, /\[\[evidence\/records\/2026-09\/readme.md.md\|run\]\]/);
+  assert.equal(after.split('\n---\n')[1], f.before.split('\n---\n')[1]);
+  assert.match(after, /params-total: "7.00B"/);
+  assert.deepEqual(fs.readFileSync(card), cardBefore);
+  r = f.cli('check', '--json');
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  assert.equal(JSON.parse(r.stdout).warnings, 0);
+  assert.equal(JSON.parse(f.cli('sources', '--json').stdout).pages, 0);
+  assert.equal(fs.readFileSync(f.model, 'utf8'), after);
+});
+
+test('migration rejects bad citations and unknown source metadata before writing', (t) => {
+  const f = evidenceFixture(t);
+  fs.writeFileSync(f.model, f.before.replace('source: run', 'source: absent'));
+  let r = f.cli('sources', '--json');
+  assert.equal(r.status, 1, r.stderr);
+  assert.ok(JSON.parse(r.stdout).errors.some((x) => x.code === 'claim-evidence'));
+  assert.match(fs.readFileSync(f.model, 'utf8'), /  - id: paper/);
+  const unknown = f.before.replace('  - id: paper', '  - id: paper\n    extra: keep-me');
+  fs.writeFileSync(f.model, unknown);
+  r = f.cli('sources', '--json');
+  assert.equal(r.status, 2);
+  assert.match(r.stderr, /extra metadata/);
+  assert.equal(fs.readFileSync(f.model, 'utf8'), unknown);
+});
+
+test('native source validation guards IDs, targets, footnotes, claims and orphan cards', (t) => {
+  const f = evidenceFixture(t);
+  assert.equal(f.cli('sources').status, 0);
+  const migrated = fs.readFileSync(f.model, 'utf8');
+  for (const [old, next, code] of [
+    ['|paper]]', '|run]]', 'sources'],
+    ['|paper]]', ']]', 'sources'],
+    ['evidence/sources/example.org/readme.md.md|paper', 'evidence/sources/example.org/readme.md|paper', 'source-resource'],
+    ['evidence/sources/example.org/readme.md.md|paper', 'bank/entities/models/alpha-model.md|paper', 'source-resource'],
+    ['evidence/sources/example.org/readme.md.md|paper', 'evidence/sources/missing.org/readme.md.md|paper', 'source-resource'],
+    ['source: run', 'source: absent', 'claim-evidence'],
+    ['at: L1', 'at: L99', 'claim-evidence'],
+    ['[^paper]: [Paper](../../../evidence/sources/example.org/readme.md.md)', '[^paper]: [Paper](../../../evidence/records/2026-09/readme.md.md)', 'footnote'],
+  ]) {
+    fs.writeFileSync(f.model, migrated.replace(old, next));
+    const r = f.cli('check', '--json');
+    assert.equal(r.status, 1, r.stdout + r.stderr);
+    assert.ok(JSON.parse(r.stdout).findings.some((x) => x.code === code), r.stdout);
+  }
+  fs.writeFileSync(f.model, f.before);
+  let r = f.cli('check', '--json');
+  assert.ok(JSON.parse(r.stdout).findings.some((x) => x.code === 'sources' && /native/.test(x.message)));
+  fs.writeFileSync(f.model, migrated.replace(/  - "\[\[evidence\/sources[^\n]+\n/, '').replace('Result.[^paper][^run]', 'Result.[^run]').replace(/\[\^paper\]:[^\n]+\n/, ''));
+  r = f.cli('check', '--json');
+  assert.ok(JSON.parse(r.stdout).findings.some((x) => x.code === 'evidence-unreferenced'), r.stdout);
+});

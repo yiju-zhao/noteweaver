@@ -15,7 +15,7 @@ description: 收录材料、创建或修改 Noteweave 知识页，处理弃用�
 1. 按 `evidence.md` 查重、存原件和证据卡，记录版本、获取时间、发布方、等级与原件哈希。材料更新时另存快照，已有证据保持原字节。
 2. 按 `kinds.md` 判别内容单元，按 resource、页面名、title 和 aliases 查重。对应对象已有页面时归到该页。
 3. 按 `attributes.md` 决定 frontmatter 或 Claim 的放置。值与现有同属性同范围内容冲突时交给人；已有 Claim 的不可变字段按 `claims.md` 处理。
-4. 在来源登记和正文脚注中建立可核查引用；改动页写本次 generated，保持数量的原始字符串、尾零及引号。schema 的词条、枚举与单位均读目标实例；嵌套 YAML 和精确数值通过源码编辑，避免属性面板重写。
+4. 按实例 schema 与 evidence.md 登记来源和正文脚注。`formats.sources: wikilink` 时，sources 为完整卡片路径的原生链接列表，链接别名保留页内 ID；脚注和 Claim 的 source 使用同一 ID。改动页写本次 generated，保持数量的原始字符串、尾零及引号；嵌套 YAML 和精确数值通过源码编辑，避免属性面板重写。
 5. 运行 `commands.kb index`，按 `navigation.md` 更新日志，再运行 `commands.kb check`。错误清零，逐项处理警告；输出包含修改页面、证据和仍待人决定的事项。
 
 ## 改名、删除、合并
