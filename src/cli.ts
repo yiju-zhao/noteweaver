@@ -1,8 +1,6 @@
-import fs from "node:fs";
 import path from "node:path";
-import { spawnSync } from "node:child_process";
-import { discover, loadInstance, runOffline, Instance } from "./bank/node";
-import { Request, Result } from "./bank/operations";
+import { discover, loadInstance, runOffline } from "./bank/node";
+import { Request } from "./bank/operations";
 export function parseArgs(args: string[]) {
   let root: string | undefined,
     offline = false,
@@ -31,48 +29,18 @@ export function parseArgs(args: string[]) {
   request.operation = operation as Request["operation"];
   return { root, offline, json, request };
 }
-export function live(instance: Instance, request: Request): Result {
-  request = { ...request, vault: instance.vault };
-  const name =
-    instance.layout.config.vault_name ?? path.basename(instance.vault);
-  const code = `(async()=>{const p=app.plugins.plugins['kb-types'];if(!p||p.automationVersion!==1)throw Error('Noteweave automation unavailable; install and reload the pinned plugin');return JSON.stringify(await p.runAutomation(${JSON.stringify(request)}));})()`;
-  const r = spawnSync("obsidian", [`vault=${name}`, "eval", `code=${code}`], {
-    encoding: "utf8",
-    timeout: 120000,
-    maxBuffer: 64 << 20,
-  });
-  if (r.error) throw r.error;
-  if (r.status !== 0)
-    throw new Error(r.stderr || r.stdout || "Obsidian command failed");
-  let result: Result;
-  try {
-    result = JSON.parse(r.stdout.trim().replace(/^=>\s*/, ""));
-  } catch {
-    throw new Error(
-      `Obsidian returned no structured result: ${r.stdout.trim().slice(0, 400)}`,
-    );
-  }
-  if (
-    result.apiVersion !== 1 ||
-    !Number.isInteger(result.code) ||
-    !Array.isArray(result.changes)
-  )
-    throw new Error("unsupported Noteweave automation response");
-  return result;
-}
 export function main(args: string[]) {
   if (args.includes("--help") || !args.length) {
     console.log(
-      "Noteweave: kb [--root VAULT] [--offline] <check|index|schema|refs|lift|sources|info|review> [--json] [--base REV] [--check] [--dry-run]\nNormal commands connect to Obsidian. --offline explicitly selects filesystem execution for CI and isolated fixtures.",
+      "Noteweave offline runner: node cli.cjs [--root VAULT] --offline <check|index|schema|refs|lift|sources|info|review> [--json] [--base REV] [--check] [--dry-run]\nRequires --offline for CI and isolated fixtures. Daily use: obsidian vault=<name> command id=kb-types:check-bank; use Obsidian eval for parameters and JSON.",
     );
     return 0;
   }
   try {
     const { root, offline, json, request } = parseArgs(args);
+    if (!offline) throw new Error("daily operations use Obsidian CLI: obsidian vault=<name> command id=kb-types:check-bank; this runner requires --offline for CI or isolated fixtures");
     const instance = root ? loadInstance(root) : discover(process.cwd());
-    const result = offline
-      ? runOffline(instance, request)
-      : live(instance, request);
+    const result = runOffline(instance, request);
     if (result.code === 2)
       throw new Error(result.data?.error ?? "Noteweave operation failed");
     if (json || ["info", "review"].includes(request.operation))
@@ -99,15 +67,15 @@ export function main(args: string[]) {
           `${f.path}${f.line ? ":" + f.line : ""}: ${f.severity}: [${f.code}] ${f.message}`,
         );
       console.log(
-        `kb check: ${result.data.pages} pages, ${result.data.claims} claims, ${result.data.cards} evidence cards: ${result.data.errors} errors, ${result.data.warnings} warnings`,
+        `Noteweave check: ${result.data.pages} pages, ${result.data.claims} claims, ${result.data.cards} evidence cards: ${result.data.errors} errors, ${result.data.warnings} warnings`,
       );
     } else if (request.operation === "sources") {
-      console.log(`kb sources: ${request.dryRun ? "would migrate" : "migrated"} ${result.data.pages} pages`);
+      console.log(`Noteweave sources: ${request.dryRun ? "would migrate" : "migrated"} ${result.data.pages} pages`);
       for (const f of result.data.errors) console.log(`${f.path}: [${f.code}] ${f.message}`);
     } else if (request.operation === "lift") {
       const s = result.data;
       console.log(
-        `kb lift: ${request.dryRun ? "would lift" : "lifted"} ${s.promoted} keys on ${s.pages} pages; ${s.kept} claims stay`,
+        `Noteweave lift: ${request.dryRun ? "would lift" : "lifted"} ${s.promoted} keys on ${s.pages} pages; ${s.kept} claims stay`,
       );
       for (const [p, a, v] of s.conflicts)
         console.log(
@@ -125,7 +93,7 @@ export function main(args: string[]) {
         );
     return result.code;
   } catch (e) {
-    console.error(`kb: ${(e as Error).message}`);
+    console.error(`Noteweave: ${(e as Error).message}`);
     return 2;
   }
 }

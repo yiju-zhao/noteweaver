@@ -538,7 +538,7 @@ export class Checker {
       this.warn(
         "claim-place",
         rel,
-        `${where}: unscoped direct value; kb lift moves it into frontmatter`,
+        `${where}: unscoped direct value; Obsidian command kb-types:lift moves it into frontmatter`,
         line,
       );
     this.checkValid(p, c, where, line);
@@ -960,7 +960,7 @@ export class Checker {
         this.add(
           "index-stale",
           rel,
-          "differs from its generated form; run kb index",
+          "differs from its generated form; run Obsidian command kb-types:index",
         );
     for (const [rel, reason] of Object.entries(
       staleSchema(this.repo, this.reg),

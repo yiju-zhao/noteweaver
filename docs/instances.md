@@ -23,8 +23,7 @@ Create `<vault>/.kb/config.json`:
   },
   "require_obsidian": true,
   "commands": {
-    "setup": ".agents/skills/setup.sh",
-    "kb": "example-vault/.kb/runtime/cli/kb --root example-vault"
+    "setup": ".agents/skills/setup.sh"
   }
 }
 ```
@@ -39,13 +38,13 @@ commands and `require_obsidian`; the CLI remains available to CI.
 Policies are Markdown files under the configured policy path, starting at
 `README.md`. The three vocabulary documents use the generated markers shown in
 the example. Review documents use frontmatter `status: open` for actionable items.
-`kb review` lists documents, not the number of decisions contained in them.
+The `review` operation lists documents, not the number of decisions contained in them.
 
-## Install CLI and skills
+## Install runtime and skills
 
 Download the same release's `runtime.zip` and verify its release SHA-256 before
-extracting into `.kb/runtime/`. Install Node.js 20+ for the CLI; installed JavaScript is already bundled, so npm installation is unnecessary.
-Run `.kb/runtime/cli/kb --root <vault> info` to verify the selected instance.
+extracting into `.kb/runtime/`. Install Node.js 20+ for the offline runner and context helper; installed JavaScript is already bundled, so npm installation is unnecessary.
+Use `runAutomation({operation:"info",vault:"<absolute vault path>"})` through Obsidian `eval` to verify the selected instance.
 Ignore `.kb/runtime/` and downloaded archives in the vault repository; commit the
 release version and hashes in that repository's lock file.
 
@@ -71,7 +70,7 @@ state in the installed plugin's `data.json`.
 
 ## One-time evidence cleanup
 
-The CLI normally rejects changes to committed evidence. A vault may explicitly
+The shared core normally rejects changes to committed evidence. A vault may explicitly
 pin a reviewed deletion receipt in `cleanup_receipts` with its repository-relative
 path and SHA-256. Receipts must be under the configured review directory, match the
 exact base commit, be new in that diff, contain an explicit authorization and
@@ -81,28 +80,34 @@ this instance policy is a human decision.
 
 ## Automation and CI
 
-Run `.kb/runtime/cli/kb --root <vault> check --json` during normal work. The CLI
-selects the configured vault and calls `kb-types.runAutomation` through Obsidian
-CLI `eval`. The plugin verifies the absolute vault path and protocol version,
-returns findings with exit code 0 (pass), 1 (findings/conflicts), or 2 (execution
-failure). A missing plugin or failed connection stops the command; it never
-switches to filesystem writes automatically.
+Daily operations use native `obsidian vault=<name> command id=kb-types:<id>`
+or `obsidian vault=<name> eval code=<JavaScript>`. The plugin registers the
+knowledge-bank actions in the command palette. `command` only accepts an ID and
+does not await its callback; retrieve the latest result with `commandResult(id)`.
+For agents, prefer a single `eval` calling `runAutomation(request)` and serializing
+the awaited result as JSON. Pass the absolute `vault` path for instance validation.
+See the [invocation reference](../skills/kb-query/references/obsidian-cli.md) for
+requests, command IDs and result handling. Protocol version 1 uses `code` 0 for
+success, 1 for findings/conflicts and 2 for execution failure. A failed connection
+never switches to filesystem writes. No new Obsidian CLI subcommand is invented.
 
 `index`, `schema` and `lift` compute edits with the same pure core. The plugin
 checks the expected original content before writing, uses `Vault.process` for
 notes and the vault adapter for hidden policy documents. Concurrent edits stop
 the remaining writes; already completed edits can be inspected and rerun. This
-is not a transaction across files. `--check` and `--dry-run` return plans without
+is not a transaction across files. `check:true` and `dryRun:true` return plans without
 writing. Search, read, rename and trash continue to use native Obsidian commands.
 
-For CI, run `.kb/runtime/cli/kb --root <vault> --offline check --json`. This calls
-the same bundled core without a desktop application. Offline writes are intended
-for explicitly selected isolated fixtures or migrations; everyday work uses the
+For CI, run `node <vault>/.kb/runtime/cli/cli.cjs --root <vault> --offline check --json`. This calls
+the same bundled core without a desktop application. Offline writes are reserved
+for explicitly selected isolated fixtures; everyday work uses the
 live adapter. Git must be available for history checks. Full automation is a
 desktop feature; regular plugin display does not load desktop automation modules.
 
 The `cli/runtime.cjs` bundle exports the Node adapter and pure operations for
 integration tests. It is versioned with the plugin, not a second rule implementation.
 Upgrading from 0.5 replaces Python runtime files; consumers that imported `kblib`
-must call the CLI or the TypeScript bundle instead. Instance installer scripts and
+must call the offline runner or the TypeScript bundle instead. Instance installer scripts and
 consumer test harnesses may use Python independently of the Noteweave runtime.
+
+Version 0.8 removes the daily CLI wrapper. Remove `commands.kb` and local `kb` shims, update skills and hooks to native Obsidian calls, and keep a separate explicit offline check for CI. Hooks must parse the JSON result and propagate its code; Obsidian process success alone is insufficient.

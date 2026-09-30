@@ -6,7 +6,7 @@ description: 为 Noteweave 知识库调研外部材料、比较对象、核对�
 
 先运行同一运行包的查询上下文脚本：`node <本 skill 目录>/../kb-query/scripts/context.cjs`；可传 `--vault <目标 vault 绝对路径>`。它定位实例并检查该实例要求的 Obsidian 前置条件。失败时按提示处理；多个知识库时使用用户指定的目标，不猜默认库。
 
-读取返回的配置：`paths` 相对 vault，`commands` 相对 repository。现行规则从 `paths.policies` 按需读取，词表以 `paths.schema` 为准。Obsidian 命令的首参数使用返回的 `vault_name`，定位文件用 `path=<相对 vault 路径>`。配置和待审记录通过文件系统读取，知识通过实例规定的入口读取。
+读取返回的配置：`paths` 相对 vault，`commands` 相对 repository。现行规则从 `paths.policies` 按需读取，词表以 `paths.schema` 为准。Obsidian 命令的首参数使用返回配置中的 `vault_name`，定位文件用 `path=<相对 vault 路径>`。配置和待审记录通过文件系统读取，知识通过实例规定的入口读取。
 
 运行实例的 `commands.research_setup`（如有），读取收录范围与证据政策。
 
@@ -17,4 +17,4 @@ description: 为 Noteweave 知识库调研外部材料、比较对象、核对�
 
 临时材料放任务临时目录。关键问题已有可定位证据，或进一步尝试只重复已有结果时结束检索并报告缺口。持久知识归目标 bank/evidence，实例自己的设计维护资料归调用者指定的维护位置。
 
-实例的 `commands.kb` 默认通过 Obsidian CLI 调用运行中的 Noteweave，检查结果可加 `--json`。连接失败就停止并处理前置条件；`--offline` 专供 CI 或明确指定的隔离测试，不作为日常操作的回退。
+调用 Noteweave 前读取 [Obsidian CLI 入口](../kb-query/references/obsidian-cli.md)。agent 使用原生 `eval` 传入 operation 和绝对 vault 路径，解析返回的 code 与 data；连接失败停止处理，不回退直接写盘。原生 `command id=...` 适合交互调用，提交检查必须等待结果。

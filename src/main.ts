@@ -1,4 +1,5 @@
 import type { ObsidianBank } from "./bank/obsidian";
+import { bankCommands, CommandResults, commandSummary } from "./commands";
 import { Request } from "./bank/operations";
 import { loadRegistry } from "./bank/registry";
 import { instanceSchemaPath, readInstanceConfig } from "./instance";
@@ -21,6 +22,12 @@ const DEFAULTS: Settings = { actor: "" };
 export default class KbTypes extends Plugin {
   readonly automationVersion = 1;
   private bank?: ObsidianBank;
+  private commandResults = new CommandResults();
+  commandResult(expectedId?: string) { return this.commandResults.result(expectedId); }
+  private runBankCommand(id: string, request: Request) {
+    void this.commandResults.start(id, () => this.runAutomation(request))
+      .then(result => { new Notice(commandSummary(request, result), 8000); });
+  }
   async runAutomation(request: Request) {
     const { ObsidianBank } = await import("./bank/obsidian");
     this.bank ??= new ObsidianBank(this.app);
@@ -69,9 +76,12 @@ export default class KbTypes extends Plugin {
         if (!checking) this.chooseKey(file, spec);
         return true;
       } });
-    this.addCommand({ id: "check-bank", name: "检查完整知识库", callback: async () => {
-      const result = await this.runAutomation({ operation: "check" });
-      new Notice(result.code === 2 ? result.data.error : `Noteweave：${result.data.errors} 错误，${result.data.warnings} 警告`);
+    for (const command of bankCommands) this.addCommand({ id: command.id, name: command.name,
+      callback: () => this.runBankCommand(command.id, { ...command.request }) });
+    this.addCommand({ id: "refs", name: "列出当前页的全部入链", callback: () => {
+      const file = this.app.workspace.getActiveFile();
+      // Missing active page is an execution failure, also retained in commandResult.
+      this.runBankCommand("refs", { operation: "refs", name: file?.basename });
     } });
     this.addCommand({ id: "check-vault", name: "检查全库 frontmatter", callback: () => void this.checkVault() });
     this.addCommand({ id: "show-findings", name: "打开检查面板", callback: () => void this.openView() });

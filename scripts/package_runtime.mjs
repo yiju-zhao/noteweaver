@@ -13,7 +13,6 @@ function walk(dir) {
   }
 }
 walk(join(root, "skills"));
-entries.push(["cli/kb", readFileSync(join(root, "cli/kb"))]);
 for (const name of ["cli.cjs", "context.cjs", "runtime.cjs"])
   entries.push(["cli/" + name, readFileSync(join(root, "dist", name))]);
 entries.push([
@@ -49,10 +48,7 @@ for (const [name, data] of entries) {
   directory.writeUInt32LE(0x02014b50);
   directory.writeUInt16LE(0x314, 4);
   header.copy(directory, 6, 4, 30);
-  directory.writeUInt32LE(
-    ((name === "cli/kb" ? 0o100755 : 0o100644) << 16) >>> 0,
-    38,
-  );
+  directory.writeUInt32LE((0o100644 << 16) >>> 0, 38);
   directory.writeUInt32LE(offset, 42);
   files.push(header, n, data);
   central.push(directory, n);

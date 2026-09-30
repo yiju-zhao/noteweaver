@@ -145,39 +145,16 @@ test("offline writer rejects edits made after planning and writes nothing", (t) 
   assert.equal(fs.existsSync(path.join(f.vault, "bank/new.md")), false);
   assert.match(fs.readFileSync(path.join(f.vault, p), "utf8"), /Human edit/);
 });
-test("live CLI uses the selected vault and never falls back to filesystem writes", (t) => {
-  const f = fixture(t),
-    bin = path.join(f.tmp, "bin");
-  fs.mkdirSync(bin);
-  fs.writeFileSync(
-    path.join(bin, "obsidian"),
-    `#!${process.execPath}\nprocess.stdout.write('=> '+JSON.stringify({apiVersion:1,code:2,data:{error:'vault mismatch'},changes:[]}));`,
-    { mode: 0o755 },
-  );
-  const r = spawnSync(
-    process.execPath,
-    [path.join(root, "dist/cli.cjs"), "--root", f.vault, "index"],
-    { encoding: "utf8", env: { ...process.env, PATH: bin } },
-  );
-  assert.equal(r.status, 2);
-  assert.match(r.stderr, /vault mismatch/);
-});
-test("live CLI passes structured requests and preserves findings exit codes", (t) => {
-  const f = fixture(t),
-    bin = path.join(f.tmp, "bin");
-  fs.mkdirSync(bin);
-  fs.writeFileSync(
-    path.join(bin, "obsidian"),
-    `#!${process.execPath}\nif(process.argv[2]!=='vault=research-notebook'||!process.argv[4].includes('runAutomation')||!process.argv[4].includes(${JSON.stringify(JSON.stringify(f.vault))})) process.exit(9);process.stdout.write('=> '+JSON.stringify({apiVersion:1,code:1,data:{errors:1,warnings:0,findings:[{code:'claim-immutable'}]},changes:[]}));`,
-    { mode: 0o755 },
-  );
-  const r = spawnSync(
-    process.execPath,
-    [path.join(root, "dist/cli.cjs"), "--root", f.vault, "check", "--json"],
-    { encoding: "utf8", env: { ...process.env, PATH: bin } },
-  );
-  assert.equal(r.status, 1, r.stderr);
-  assert.equal(JSON.parse(r.stdout).findings[0].code, "claim-immutable");
+test("runner refuses daily operations without --offline before reading or writing a vault", (t) => {
+  const f = fixture(t);
+  const p = path.join(f.vault, "bank/index.md");
+  const before = fs.readFileSync(p, "utf8");
+  for (const operation of ["check", "index", "schema", "lift", "sources"]) {
+    const r = spawnSync(process.execPath, [path.join(root, "dist/cli.cjs"), "--root", f.vault, operation], { encoding: "utf8" });
+    assert.equal(r.status, 2);
+    assert.match(r.stderr, /daily operations use Obsidian CLI/);
+  }
+  assert.equal(fs.readFileSync(p, "utf8"), before);
 });
 
 function evidenceFixture(t) {

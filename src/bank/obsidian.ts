@@ -122,6 +122,10 @@ export class ObsidianBank {
       // Return paths, not entire before/after page contents, across the CLI transport.
       return {
         ...result,
+        data: request.operation === "info" ? {
+          ...result.data, root: instance.root, vault: instance.vault,
+          paths: Object.fromEntries(Object.entries(layout.paths).map(([key, value]) => [key, path.join(instance.root, value)])),
+        } : result.data,
         changes: result.changes.map((p) => ({
           path: p.path,
           before: null,

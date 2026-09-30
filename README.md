@@ -11,7 +11,7 @@ properties. Each vault supplies its own `.kb/config.json`, schema and policies.
 
    ```sh
    gh auth login
-   gh release download 0.6.0 --repo CARI-DAAL/noteweave --dir noteweave-release \
+   gh release download 0.8.0 --repo CARI-DAAL/noteweave --dir noteweave-release \
      --pattern main.js --pattern manifest.json --pattern styles.css
    ```
 2. Put the three files in `<vault>/.obsidian/plugins/kb-types/`.
@@ -48,7 +48,7 @@ optional validation bundle, not for installing the plugin in Obsidian.
 The current interface uses Chinese labels. This release targets knowledge bases
 using the documented schema and evidence conventions; see [schema format](docs/schema.md).
 It does not bundle a team's vocabulary or content. The desktop plugin runs without
-Python; the optional CLI requires Node.js 20+.
+Python; the offline runner requires Node.js 20+.
 
 ## Compatibility
 
@@ -98,15 +98,30 @@ sharing supplies temporary read access without a personal token or stored secret
 ## Release
 
 Update the package, lockfile, manifest, and `versions.json`; run tests and build.
-Push a tag matching the manifest version, for example `0.6.0`. The release workflow
+Push a tag matching the manifest version, for example `0.8.0`. The release workflow
 builds and tests the tag and creates a draft GitHub Release with plugin files,
-the validation bundle, runtime.zip (CLI and skills), and checksums. Review and publish that draft.
+the validation bundle, runtime.zip (offline runner and skills), and checksums. Review and publish that draft.
 
 ## License
 
 This is a private CARI-DAAL repository. An open-source license has not been selected.
 The bundled YAML dependency is covered by [third-party notices](THIRD_PARTY_NOTICES.md).
 
-## CLI and agent skills
+## Obsidian CLI and agent skills
 
-The same release includes `runtime.zip`: the CLI, generic `kb-query`, `kb-write` and `kb-research` skills, and the shared validation bundle. The plugin and CLI execute the same TypeScript knowledge-bank core: schema, frontmatter, Claim, evidence, index, references and Git-history checks. Normal CLI commands call the running plugin through Obsidian CLI and return structured results; `--offline` explicitly selects the filesystem adapter for CI or isolated fixtures. See [instance installation](docs/instances.md).
+Daily automation uses the official Obsidian CLI:
+
+```sh
+obsidian vault=example-vault command id=kb-types:check-bank
+obsidian vault=example-vault eval 'code=(async()=>JSON.stringify(await app.plugins.plugins["kb-types"].runAutomation({operation:"check"})))()'
+```
+
+`command` triggers a palette action; `eval` accepts parameters and returns JSON.
+Inspect the result's `code` (0 success, 1 findings/conflicts, 2 execution failure),
+not just the Obsidian process exit status. See [native invocation](skills/kb-query/references/obsidian-cli.md)
+for the command catalog, absolute vault validation, and waiting for palette results.
+
+The same release includes `runtime.zip`: generic `kb-query`, `kb-write` and
+`kb-research` skills, an explicitly offline Node runner, and shared validation.
+There is no daily `kb` wrapper. Desktop automation and offline CI use the same
+TypeScript core. See [instance installation](docs/instances.md).

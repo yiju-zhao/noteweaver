@@ -242,7 +242,7 @@ export function staleSchema(repo: Repo, reg: Registry) {
     try {
       const text = repo.store.read(p);
       if (text !== replaceSections(text, blocks, p))
-        out[p] = "differs from schema.json; run kb schema";
+        out[p] = "differs from schema.json; run Obsidian command kb-types:schema";
     } catch (e) {
       out[p] = (e as Error).message;
     }
