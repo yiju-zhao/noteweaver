@@ -40,6 +40,30 @@ function object(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === "object" && !Array.isArray(value);
 }
 
+export function renderSourceBacklinks(root: HTMLElement, value: unknown,
+  lookup: EvidenceLookup, open: (link: EvidenceLink, event: MouseEvent) => void) {
+  root.replaceChildren();
+  root.classList.add("noteweaver-nested");
+  root.setAttribute("aria-label", "cited_by（自动维护）");
+  if (!Array.isArray(value) || !value.length) {
+    element(root, "span", "noteweaver-nested-muted", "暂无引用页面"); return;
+  }
+  const list = element(root, "ul", "noteweaver-nested-list");
+  for (const entry of value) {
+    const path = typeof entry === "string" ? /^\[\[([^|\]#]+)\]\]$/.exec(entry)?.[1] : undefined;
+    const item = element(list, "li", "");
+    const link = path && lookup(path);
+    if (!link) { element(item, "span", "noteweaver-nested-missing", String(entry)); continue; }
+    const a = element(item, "a", "internal-link", link.title);
+    a.setAttribute("href", link.path); a.setAttribute("data-href", link.path);
+    const follow = (event: MouseEvent) => {
+      if (event.button > 1) return;
+      event.preventDefault(); event.stopPropagation(); open(link, event);
+    };
+    a.addEventListener("click", follow); a.addEventListener("auxclick", follow);
+  }
+}
+
 function tree(parent: HTMLElement, value: unknown, seen = new Set<unknown>(), depth = 0) {
   if (value === null || typeof value !== "object") {
     element(parent, "span", "noteweaver-nested-scalar", scalar(value));

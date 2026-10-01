@@ -10,6 +10,8 @@ export const bankCommands: { id: string; name: string; request: Request }[] = [
   { id: "lift", name: "将无范围断言迁入属性", request: { operation: "lift" } },
   { id: "sources-preview", name: "预览原生证据链接迁移", request: { operation: "sources", dryRun: true } },
   { id: "sources", name: "迁移原生证据链接", request: { operation: "sources" } },
+  { id: "source-backlinks-preview", name: "预览证据卡引用属性", request: { operation: "source-backlinks", dryRun: true } },
+  { id: "source-backlinks", name: "同步证据卡引用属性", request: { operation: "source-backlinks" } },
   { id: "info", name: "读取知识库实例信息", request: { operation: "info" } },
   { id: "review", name: "列出待审文档", request: { operation: "review" } },
 ];

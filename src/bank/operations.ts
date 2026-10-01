@@ -1,13 +1,14 @@
-import { Repo, Patch, patches, parsePage, inside, compare } from "./model";
+import { Repo, Patch, patches, parsePage, inside, compare, sourceLineBudgets } from "./model";
 import { loadRegistry } from "./registry";
 import { Checker, refs } from "./check";
 import { renderIndexes, renderSchema } from "./render";
 import { lift } from "./lift";
 import { migrateSources } from "./sources";
+import { planSourceBacklinks } from "../source-backlinks";
 import type { InitOptions } from "../initialize";
 export interface Request {
   initialize?: InitOptions;
-  operation: "init" | "check" | "index" | "schema" | "lift" | "sources" | "refs" | "info" | "review";
+  operation: "init" | "check" | "index" | "schema" | "lift" | "sources" | "source-backlinks" | "refs" | "info" | "review";
   base?: string;
   name?: string;
   check?: boolean;
@@ -105,12 +106,27 @@ export function execute(
         request.dryRun ? [] : changes,
       );
     }
+    case "source-backlinks": {
+      if (reg.schema.formats.sources_inverse !== "cited_by")
+        throw new Error("set schema formats.sources_inverse to cited_by before synchronizing");
+      const prefix = repo.layout.vault ? repo.layout.vault + "/" : "";
+      const relative = (p: string) => p.slice(prefix.length);
+      const plan = planSourceBacklinks(reg.schema,
+        repo.allPages().map(p => ({ path: relative(p.path), text: repo.store.read(p.path) })),
+        [...repo.cards.values()].map(c => ({ path: relative(c.path), text: repo.store.read(c.path) })),
+        relative(repo.evidence), sourceLineBudgets(repo));
+      const changes = plan.patches.map(p => ({ ...p, path: prefix + p.path }));
+      return done({ cards: changes.length, paths: changes.map(p => p.path), errors: plan.issues },
+        plan.issues.length ? 1 : 0, request.dryRun ? [] : changes);
+    }
     case "sources": {
       if (reg.data.formats.sources !== "wikilink")
         throw new Error("set schema formats.sources to wikilink before migrating");
       // Existing instances may contain both formats while resuming an interrupted
       // migration. Validate IDs, cards, footnotes and claims before any write.
-      const legacy = { ...reg, data: { ...reg.data, formats: { ...reg.data.formats, sources: undefined } } };
+      const legacy = { ...reg,
+        data: { ...reg.data, formats: { ...reg.data.formats, sources: undefined, sources_inverse: undefined } },
+        schema: { ...reg.schema, formats: { ...reg.schema.formats, sources_inverse: undefined } } };
       const errors = new Checker(repo, legacy).run().filter((f) => f.severity === "error");
       if (errors.length) return done({ pages: 0, errors }, 1);
       const changes = migrateSources(repo, now);

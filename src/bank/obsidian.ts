@@ -119,7 +119,7 @@ export class ObsidianBank {
       const repo = new Repo(
           layout,
           new MemoryStore(files, paths),
-          ["check", "sources"].includes(request.operation)
+          ["check", "sources", "source-backlinks"].includes(request.operation)
             ? history(instance, request.base ?? "HEAD")
             : undefined,
         ),

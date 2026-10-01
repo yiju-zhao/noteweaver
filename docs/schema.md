@@ -64,8 +64,32 @@ the display alias is the page-local citation ID (`[a-z0-9]+(-[a-z0-9]+)*`).
 Keep it stable: footnotes `[^paper]` and Claim `evidence: [{source: paper, at: L1}]`
 reference this ID. The target must be a `source` or `record` card, and footnote
 definitions must link to the same card. Duplicate IDs, fragments, URLs,
-relative `..` segments and missing aliases are rejected. Backlinks are computed
-by Obsidian, never persisted into immutable evidence cards.
+relative `..` segments and missing aliases are rejected. Obsidian computes
+backlinks for its sidebar.
+
+With native sources, opt into a frontmatter inverse with
+`formats.sources_inverse: "cited_by"`. Noteweaver maintains `cited_by` on both
+Source and Record cards as a sorted list of exact vault-relative page links:
+
+```yaml
+cited_by: ["[[bank/entities/models/alpha-model.md]]"]
+```
+
+The page's `sources` remains authoritative, including its citation aliases.
+The card's property is a read-only navigation view and is repaired after edits,
+page renames and citation removals. It represents source registrations rather
+than every prose mention. Synchronization runs with normal relation updates;
+`source-backlinks` with `dryRun: true` previews changes, and without it applies
+them. Full checks report malformed citations and stale inverses.
+
+This generated property is the only extra mutable card field. Original evidence,
+card metadata values and extracted body bytes remain protected. Cards use flow
+YAML and retain their frontmatter line count, so existing absolute evidence line
+references still select the same text as backlinks grow or shrink. Edit reviewed
+metadata in source with that line count preserved; Properties may reformat YAML.
+The plugin checkpoints the body line numbers alongside relation state, and the
+checker uses Git's prior card layout, so native rename serialization can be
+restored without changing citations.
 
 Instances without `formats.sources` retain compatibility with legacy
 `{id, resource}` entries. After setting the format, preview `obsidian vault=<name> command id=noteweaver:sources-preview`

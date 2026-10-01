@@ -27,7 +27,7 @@ export interface KbSchema {
   version: number;
   base_required: string[];
   special_values: string[];
-  formats: { quantity: string; time: string[]; wikilink: string; sources?: "wikilink" };
+  formats: { quantity: string; time: string[]; wikilink: string; sources?: "wikilink"; sources_inverse?: "cited_by" };
   vocabulary: Record<string, string>;
   directories: Record<string, DirSpec>;
 }
@@ -54,6 +54,9 @@ export function readSchema(text: string): KbSchema {
   if (raw?.version !== 3) throw new Error(`不认识的版本 ${raw?.version}，请更新插件`);
   if (raw.formats?.sources !== undefined && raw.formats.sources !== "wikilink")
     throw new Error("formats.sources must be wikilink when specified");
+  if (raw.formats?.sources_inverse !== undefined &&
+      (raw.formats.sources_inverse !== "cited_by" || raw.formats.sources !== "wikilink"))
+    throw new Error("formats.sources_inverse requires cited_by and native wikilink sources");
   for (const key of ["kinds", "directories", "predicates", "attributes", "scope_keys", "units", "enums", "jev", "formats"]) {
     const value = (raw as unknown as Record<string, unknown>)[key];
     if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error(`缺少词表节 ${key}`);
@@ -64,6 +67,10 @@ export function readSchema(text: string): KbSchema {
   const terms = { ...raw.predicates, ...raw.attributes };
   if (Object.keys(raw.predicates).some((key) => key in raw.attributes)) throw new Error("谓词与属性键重复");
   const reserved = new Set([...Object.keys(terms), ...raw.base_required, "sources", "class", "tags", "aliases", "status", "verified"]);
+  if (raw.formats.sources_inverse) {
+    if (reserved.has("cited_by")) throw new Error("cited_by is reserved for the generated evidence inverse");
+    reserved.add("cited_by");
+  }
   const types = new Set(Object.values(raw.directories).map((d) => d.type));
   const classes = new Set(Object.values(raw.directories).filter((d) => d.type === "entity").map((d) => d.class));
   for (const [key, term] of Object.entries(raw.predicates)) {

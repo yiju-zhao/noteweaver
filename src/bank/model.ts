@@ -268,6 +268,14 @@ export class Repo {
     return ps?.length === 1 ? ps[0] : undefined;
   }
 }
+/** A changed card is compared against Git's evidence layout, including after a
+ * native rename reserializes YAML. Unchanged/new cards use their current layout. */
+export function sourceLineBudgets(repo: Repo): Map<string, number> {
+  const prefix = repo.layout.vault ? repo.layout.vault + "/" : "";
+  return new Map([...repo.cards.values()].map(c => [c.path.slice(prefix.length),
+    splitFrontmatter(repo.history?.files.get(c.path)?.text ?? repo.store.read(c.path)).bodyLine]));
+}
+
 export interface Patch {
   path: string;
   before: string | null;

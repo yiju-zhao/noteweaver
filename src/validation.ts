@@ -5,3 +5,4 @@ export const apiVersion = 1;
 export const schemaVersion = 3;
 
 export { INSTANCE_DIRECTORY, INSTANCE_CONFIG, readInstanceConfig, readVaultInstance } from "./instance";
+export { planSourceBacklinks, setSourceBacklinks, readSourceLines } from "./source-backlinks";

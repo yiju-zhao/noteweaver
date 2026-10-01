@@ -31,9 +31,10 @@ obsidian vault=VAULT eval 'code=(async()=>{const p=app.plugins.plugins["noteweav
 | index / schema | `check:true` 只检查生成结果 | 待更新或已更新的路径 |
 | refs | 必填 `name:"页面名"` | frontmatter、Claim、正文的入链列表 |
 | lift / sources | `dryRun:true` 预览 | 迁移统计与冲突/错误 |
+| source-backlinks | `dryRun:true` 预览；需 schema 的 `formats.sources_inverse: "cited_by"` | cards、paths、errors；自动维护证据卡的反向引用属性 |
 | info | 无 | 实例配置、root、vault 与绝对 paths |
 | review | 无 | status 为 open 的文档列表 |
 
-`index`、`schema`、`lift`、`sources` 未传预览参数时会写入，应遵守目标实例政策和本次授权。多文件修改会在并发冲突时停止后续写入，不保证全局回滚。搜索、读取、改名、回收仍用 Obsidian 对应的原生命令。仓库配置中的 commands 仅提供 setup 等实例维护动作。
+`index`、`schema`、`lift`、`sources`、`source-backlinks` 未传预览参数时会写入，应遵守目标实例政策和本次授权。多文件修改会在并发冲突时停止后续写入，不保证全局回滚。搜索、读取、改名、回收仍用 Obsidian 对应的原生命令。仓库配置中的 commands 仅提供 setup 等实例维护动作。
 
 独立 Node runner 只用于 CI 或明确指定的隔离测试，必须显式传 `--offline`；不提供日常 `kb` 包装器。

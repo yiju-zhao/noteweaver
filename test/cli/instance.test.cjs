@@ -249,6 +249,54 @@ test('native source validation guards IDs, targets, footnotes, claims and orphan
   assert.ok(JSON.parse(r.stdout).findings.some((x) => x.code === 'evidence-unreferenced'), r.stdout);
 });
 
+test('source inverse previews and syncs while original evidence and metadata stay immutable', (t) => {
+  const f = evidenceFixture(t);
+  assert.equal(f.cli('sources').status, 0);
+  const schemaPath = path.join(f.vault, '.noteweaver/schema.json');
+  const schema = JSON.parse(fs.readFileSync(schemaPath, 'utf8'));
+  schema.formats.sources_inverse = 'cited_by';
+  fs.writeFileSync(schemaPath, JSON.stringify(schema));
+  const cards = ['sources/example.org/readme.md.md', 'records/2026-09/readme.md.md'].map(p => path.join(f.vault, 'evidence', p));
+  const before = cards.map(p => fs.readFileSync(p, 'utf8'));
+  assert.equal(spawnSync('git', ['-C', f.vault, 'add', '.']).status, 0);
+  assert.equal(spawnSync('git', ['-C', f.vault, '-c', 'user.name=test', '-c', 'user.email=test@local', 'commit', '-qm', 'evidence baseline']).status, 0);
+  let r = f.cli('check', '--json');
+  assert.equal(r.status, 1);
+  assert.ok(JSON.parse(r.stdout).findings.some(f => f.code === 'source-backlinks-stale'));
+  r = f.cli('source-backlinks', '--dry-run', '--json');
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  assert.equal(JSON.parse(r.stdout).cards, 2);
+  assert.deepEqual(cards.map(p => fs.readFileSync(p, 'utf8')), before);
+  r = f.cli('source-backlinks', '--json');
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  const after = cards.map(p => fs.readFileSync(p, 'utf8'));
+  for (let i = 0; i < cards.length; i++) {
+    assert.match(after[i], /cited_by:.*\[\[bank\/entities\/models\/alpha-model.md\]\]/);
+    assert.equal(after[i].split('\n').length, before[i].split('\n').length);
+  }
+  r = f.cli('check', '--json');
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  assert.equal(JSON.parse(r.stdout).warnings, 0);
+  assert.equal(JSON.parse(f.cli('source-backlinks', '--json').stdout).cards, 0);
+  fs.writeFileSync(cards[0], after[0].replace('\n---\n', '\n\n---\n'));
+  r = f.cli('check', '--json');
+  assert.equal(r.status, 1);
+  assert.ok(JSON.parse(r.stdout).findings.some(f => f.code === 'evidence-append-only'));
+  r = f.cli('source-backlinks', '--json');
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  assert.equal(fs.readFileSync(cards[0], 'utf8'), after[0]);
+  for (const [old, next, expected] of [['title: Example source', 'title: Changed title', 'evidence-append-only'],
+      ['grade: official', 'grade: independent', 'evidence-card-regraded']]) {
+    fs.writeFileSync(cards[0], after[0].replace(old, next));
+    r = f.cli('check', '--json');
+    assert.ok(JSON.parse(r.stdout).findings.some(f => f.code === expected), r.stdout);
+  }
+  fs.writeFileSync(cards[0], after[0].replace('[[bank/entities/models/alpha-model.md]]', '[[bank/concepts/example-concept.md]]'));
+  r = f.cli('check', '--json');
+  assert.equal(r.status, 1);
+  assert.ok(JSON.parse(r.stdout).findings.some(f => f.code === 'source-backlinks-stale'));
+});
+
 test('directly installed context is self-contained and stays bound through a global link', (t) => {
   const f = fixture(t), other = fixture(t);
   const config = JSON.parse(fs.readFileSync(f.config));
