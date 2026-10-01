@@ -12,6 +12,7 @@ const out = mkdtempSync(join(tmpdir(), "noteweaver-test-"));
 try {
   const entries = readdirSync(here).filter((f) => f.endsWith(".test.ts")).map((f) => join(here, f));
   await build({ entryPoints: entries, outdir: out, bundle: true, platform: "node", format: "cjs",
+                alias: { obsidian: join(here, "fixtures/obsidian.ts") },
                 outExtension: { ".js": ".cjs" }, logLevel: "warning" });
   const files = readdirSync(out).map((f) => join(out, f));
   const r = spawnSync(process.execPath, ["--test", ...files], {

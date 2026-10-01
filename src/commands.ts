@@ -2,6 +2,7 @@ import type { Request, Result } from "./bank/operations";
 
 /** Native command palette actions; parameterized requests use runAutomation via eval. */
 export const bankCommands: { id: string; name: string; request: Request }[] = [
+  { id: "onboard", name: "盘点知识库接入计划", request: { operation: "onboard" } },
   { id: "init-preview", name: "预览新知识库", request: { operation: "init", dryRun: true } },
   { id: "check", name: "检查完整知识库", request: { operation: "check" } },
   { id: "index", name: "更新知识库索引", request: { operation: "index" } },

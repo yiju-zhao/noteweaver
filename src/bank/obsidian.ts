@@ -14,7 +14,9 @@ import {
 } from "./model";
 import { history, loadInstance, record } from "./node";
 import { execute, Request, Result } from "./operations";
-import { initialFiles, planInitialization } from "../initialize";
+import { initialFiles, LEGACY_INIT_PATHS, planInitialization } from "../initialize";
+import { INSTANCE_CONFIG, readInstanceConfig } from "../instance";
+import { planOnboarding } from "../onboarding";
 import { applyChanges } from "./write";
 export class ObsidianBank {
   private busy = false;
@@ -36,19 +38,32 @@ export class ObsidianBank {
         );
       if (request.vault && path.resolve(request.vault) !== path.resolve(adapter.getBasePath()))
         throw new Error("requested vault does not match the running Obsidian vault");
-      if (request.operation === "init") {
+      if (request.operation === "init" || request.operation === "onboard") {
         const options = { vaultName: this.app.vault.getName(), ...request.initialize };
         if (options.vaultName !== this.app.vault.getName()) throw new Error("vaultName must match the running Obsidian vault");
-        const initial = initialFiles(options), observed = new Map<string, string | null>(), occupied = new Set<string>();
-        for (const p of [".kb", ".noteweave", ".obsidian/kb-schema.json", ...Object.keys(initial.files)]) {
+        const observed = new Map<string, string | null>(), occupied = new Set<string>();
+        const descriptor = request.operation === "onboard" && (await adapter.stat(INSTANCE_CONFIG))?.type === "file"
+          ? await adapter.read(INSTANCE_CONFIG) : null;
+        const config = descriptor != null ? readInstanceConfig(descriptor) : undefined;
+        // An existing instance is inspected against its own schema, never a proposed template.
+        const initial = config ? undefined : initialFiles(options);
+        const files = initial ? Object.keys(initial.files) : [INSTANCE_CONFIG, config!.paths.schema];
+        for (const p of [...LEGACY_INIT_PATHS, ...files]) {
           const stat = await adapter.stat(p);
           if (stat) occupied.add(p);
-          if (p in initial.files) observed.set(p, stat?.type === "file" ? await adapter.read(p) : null);
+          if (files.includes(p)) observed.set(p, stat?.type === "file" ? await adapter.read(p) : null);
         }
         const blockedDirectories = new Set<string>();
-        for (const p of initial.directories) {
+        for (const p of initial?.directories ?? []) {
           const stat = await adapter.stat(p);
           if (stat && stat.type !== "folder") blockedDirectories.add(p);
+        }
+        if (request.operation === "onboard") {
+          const markdown = new Map<string, string>();
+          for (const file of this.app.vault.getFiles()) occupied.add(file.path);
+          for (const file of this.app.vault.getMarkdownFiles())
+            markdown.set(file.path, await this.app.vault.read(file));
+          return planOnboarding(options, observed, markdown, occupied, blockedDirectories);
         }
         const result = planInitialization(options, observed, occupied, blockedDirectories);
         if (!request.dryRun && result.code === 0) {

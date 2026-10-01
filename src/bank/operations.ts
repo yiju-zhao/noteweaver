@@ -7,7 +7,7 @@ import { migrateSources } from "./sources";
 import type { InitOptions } from "../initialize";
 export interface Request {
   initialize?: InitOptions;
-  operation: "init" | "check" | "index" | "schema" | "lift" | "sources" | "refs" | "info" | "review";
+  operation: "onboard" | "init" | "check" | "index" | "schema" | "lift" | "sources" | "refs" | "info" | "review";
   base?: string;
   name?: string;
   check?: boolean;

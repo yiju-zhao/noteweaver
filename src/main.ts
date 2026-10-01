@@ -32,7 +32,7 @@ export default class Noteweaver extends Plugin {
     const { ObsidianBank } = await import("./bank/obsidian");
     this.bank ??= new ObsidianBank(this.app);
     const result = await this.bank.run(request);
-    if (result.changes.length) await this.syncRelations();
+    if (result.changes.length && !request.dryRun && !request.check) await this.syncRelations();
     return result;
   }
   settings: Settings = { ...DEFAULTS };

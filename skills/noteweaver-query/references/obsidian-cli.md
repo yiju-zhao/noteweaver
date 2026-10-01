@@ -7,7 +7,7 @@ obsidian vault=VAULT commands filter=noteweaver
 obsidian vault=VAULT command id=noteweaver:check
 ```
 
-可用命令后缀：`check`、`index`、`schema`、`lift-preview`、`lift`、`sources-preview`、`sources`、`info`、`review`、`refs`。`refs` 使用当前页；preview 只预览。`command` 触发回调即返回，进程成功不代表检查通过。需要结果时运行：
+可用命令后缀：`onboard`、`init-preview`、`check`、`index`、`schema`、`lift-preview`、`lift`、`sources-preview`、`sources`、`info`、`review`、`refs`。`onboard` 只盘点，初始化前即可使用；`refs` 使用当前页；preview 只预览。`command` 触发回调即返回，进程成功不代表检查通过。需要结果时运行：
 
 ```sh
 obsidian vault=VAULT eval 'code=(async()=>JSON.stringify(await app.plugins.plugins["noteweaver"].commandResult("check")))()'
@@ -27,6 +27,8 @@ obsidian vault=VAULT eval 'code=(async()=>{const p=app.plugins.plugins["noteweav
 
 | operation | 参数 | data |
 | --- | --- | --- |
+| onboard | 可选 `initialize:{name,repositoryRoot,paths,schema}` | state、config、conflicts、initialization、inventory；始终只读，不要求已有 config |
+| init | 可选 `initialize:{name,repositoryRoot,paths,schema}`、`dryRun:true` | 创建目录和文件列表、conflicts；冲突时无写入 |
 | check | 可选 `base:"<git revision>"` | errors、warnings、findings、pages、claims、cards |
 | index / schema | `check:true` 只检查生成结果 | 待更新或已更新的路径 |
 | refs | 必填 `name:"页面名"` | frontmatter、Claim、正文的入链列表 |

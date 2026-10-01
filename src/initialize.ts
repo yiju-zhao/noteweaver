@@ -12,6 +12,7 @@ export interface InitOptions {
   paths?: Record<string, string>;
   schema?: Dict;
 }
+export const LEGACY_INIT_PATHS = [".kb", ".noteweave", ".obsidian/kb-schema.json"];
 export function initialFiles(options: InitOptions = {}) {
   const config = readInstanceConfig(JSON.stringify({ version: 1,
     name: options.name ?? "Knowledge bank", vault_name: options.vaultName,
@@ -54,7 +55,7 @@ export function initialFiles(options: InitOptions = {}) {
 }
 export function planInitialization(options: InitOptions, observed: Map<string, string | null>, occupied: Set<string> = new Set(), blockedDirectories: Set<string> = new Set()) {
   const initial = initialFiles(options), conflicts: string[] = [], changes: Patch[] = [];
-  for (const old of [".kb", ".noteweave", ".obsidian/kb-schema.json"])
+  for (const old of LEGACY_INIT_PATHS)
     if (occupied.has(old)) conflicts.push(`migrate existing ${old} before initialization`);
   for (const directory of initial.directories)
     if (blockedDirectories.has(directory)) conflicts.push(`file blocks directory: ${directory}`);

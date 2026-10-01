@@ -25,7 +25,8 @@ For a local build, use `./dist` in place of `./release`.
 
 `--bootstrap` permits installing tools before an instance descriptor exists; it
 does not create knowledge content. Open the vault in Obsidian, enable Noteweaver,
-and use the bundled `noteweaver-init` skill to preview and apply initialization.
+and use the bundled `noteweaver-init` skill to inventory the vault, preview and
+apply initialization, then adopt existing notes in checked batches.
 Existing instances omit `--bootstrap`. The installer preserves the plugin's
 `data.json`, schema, policies and knowledge. A lock pins every release asset by
 SHA-256 and records the source commit.
@@ -37,6 +38,16 @@ runtime. For hosts without plugins, `--mode skills` additionally installs the
 same skills into `.agents/skills/`; enable one discovery mode per host.
 See [installation and migration](docs/instances.md) for marketplace setup,
 dependencies, instance binding, explicit migration and rollback.
+
+For an empty vault, ask an agent: “Use noteweaver-init to create a knowledge bank
+at `/absolute/vault` for my selected collection scope.” For an existing vault:
+“Use noteweaver-init to inspect `/absolute/vault`, plan how to preserve and adopt
+my notes, then convert the selected scope and verify it.” The skill covers
+inventory, scope and vocabulary mapping, recoverable batches, evidence and link
+handling, and final checks. Its read-only `onboard` operation works before config
+exists and reports files and conflicts; it never converts content automatically.
+See the [workflow](skills/noteweaver-init/SKILL.md) and
+[existing-vault adoption](skills/noteweaver-init/references/adoption.md).
 
 ## Use
 

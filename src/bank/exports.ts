@@ -5,3 +5,4 @@ export { renderIndexes, renderSchema, renderJev } from "./render";
 export { parsePage, yaml, Repo } from "./model";
 
 export { initialFiles, planInitialization } from "../initialize";
+export { planOnboarding } from "../onboarding";

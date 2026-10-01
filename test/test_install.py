@@ -30,6 +30,7 @@ class InstallationTests(unittest.TestCase):
         self.install(); receipt=json.loads((self.metadata/'installation.json').read_text())
         self.assertEqual(len(receipt['skills']),9)
         self.assertTrue((self.plugin/'skills/noteweaver-init/SKILL.md').is_file())
+        self.assertTrue((self.plugin/'skills/noteweaver-init/references/adoption.md').is_file())
         self.assertTrue((self.plugin/'skills/archify/bin/archify.mjs').is_file())
         self.assertFalse((self.metadata/'runtime/skills').exists())
         self.assertEqual((self.destination/'data.json').read_bytes(),self.state)
@@ -92,6 +93,7 @@ class InstallationTests(unittest.TestCase):
     def test_fallback_mode_materializes_same_skills_without_another_source_tree(self):
         self.install(mode='skills')
         self.assertEqual((self.root/'.agents/skills/noteweaver-query/SKILL.md').read_bytes(),(self.plugin/'skills/noteweaver-query/SKILL.md').read_bytes())
+        self.assertEqual((self.root/'.agents/skills/noteweaver-init/references/adoption.md').read_bytes(),(self.plugin/'skills/noteweaver-init/references/adoption.md').read_bytes())
         with self.assertRaisesRegex(ValueError,'mode changed'):self.install()
     def test_bootstrap_installs_only_tools_and_requires_explicit_flag(self):
         (self.metadata/'config.json').unlink(); (self.metadata/'schema.json').unlink()

@@ -75,7 +75,41 @@ temporary directory; browser credentials and profiles are never part of releases
 
 ## Initialization and adoption
 
-With Noteweaver enabled in the running vault, preview:
+Use the bundled [noteweaver-init skill](../skills/noteweaver-init/SKILL.md) for the
+agent workflow from a blank vault or an existing collection. It inventories the
+vault, establishes scope and a file-by-file plan, initializes required structure,
+adopts notes in recoverable batches and verifies the selected scope.
+
+With Noteweaver enabled in the running vault, first inspect without writing:
+
+```javascript
+await app.plugins.plugins.noteweaver.runAutomation({
+  operation: "onboard", vault: "/absolute/vault",
+  initialize: { name: "Research notebook", repositoryRoot: "." }
+});
+```
+
+`onboard` needs no instance descriptor and always returns `changes: []`.
+`data.state` is `blank`, `existing`, `initialized` or `legacy`. `data.inventory`
+lists visible Markdown files with their existing title/type/class, role, exact
+directory binding, missing frontmatter properties, parsing and naming issues;
+it also reports directory counts, duplicate candidate basenames and other visible
+files. No note body or invented classification is returned. Code 0 means the
+inspection succeeded, not that those notes conform or their facts were verified.
+
+For a new instance, `data.initialization` contains the initialization preview
+(`code`, `conflicts`, `directories`, `files`). For an initialized instance it is
+null: the report uses the existing descriptor and schema, preserving local paths,
+vocabulary and edited policies instead of comparing them with starter templates.
+`initialize` proposes settings only for new instances. Legacy markers and creation
+conflicts return code 1; malformed descriptors or schemas return code 2.
+
+For an existing vault, follow the [adoption workflow](../skills/noteweaver-init/references/adoption.md)
+before editing notes. The plan accounts for adopted, retained, excluded and pending
+files; checks only cover the configured content roots. A valid empty scaffold is
+not proof that existing notes were converted.
+
+For a new instance, preview structure creation using the chosen settings:
 
 ```javascript
 await app.plugins.plugins.noteweaver.runAutomation({
@@ -128,7 +162,9 @@ old manifest.
 
 ## Automation and checks
 
-Protocol version 1 returns `{apiVersion,code,data,changes}`. Code 0 is success,
+Protocol version 1 returns `{apiVersion,code,data,changes}`. `onboard` is a read-only
+desktop operation; the offline runner continues to require an existing instance.
+Code 0 is success,
 1 is findings/conflicts, and 2 is execution failure. `init`, `index`, `schema`,
 `lift` and `sources` use planned writes with original-content checks. Across files
 this is not a transaction: an external concurrent edit stops remaining writes;
