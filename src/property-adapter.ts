@@ -73,7 +73,9 @@ export function installReadonlyProperties(plugin: Plugin, isBankPage: (file: TFi
       // Source parsing uses failsafe YAML so the presentation also keeps lexical
       // quantities and timestamps. The native cache's parsed numbers are unused.
       void plugin.app.vault.cachedRead(file).then(async (text) => {
-        if (!active || pending.get(el) !== token || !el.isConnected) return;
+        // Native editors render rows before attaching them, including background
+        // tabs. The token protects reused rows; detached rows must still render.
+        if (!active || pending.get(el) !== token) return;
         // Native metadata rows use the unknown-type icon for nested YAML. Change
         // only this rendered bank property, keeping the shared widget/type intact.
         const icon = el.closest(".metadata-property")?.querySelector<HTMLElement>(".metadata-property-icon");
@@ -106,7 +108,7 @@ export function installReadonlyProperties(plugin: Plugin, isBankPage: (file: TFi
             links.set(path, { path, title: typeof fm.title === "string" ? fm.title : target.basename });
           }
         }));
-        if (!active || pending.get(el) !== token || !el.isConnected) return;
+        if (!active || pending.get(el) !== token) return;
         renderNested(el, key, data?.[key], file.path, (path) => links.get(path), (link, event) => {
           const target = plugin.app.vault.getAbstractFileByPath(link.path);
           if (!(target instanceof TFile)) { new Notice("证据卡片已不存在，请检查来源路径"); return; }
