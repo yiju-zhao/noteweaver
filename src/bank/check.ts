@@ -29,10 +29,12 @@ import {
   SLUG,
   NOT_PAGES,
   parsePage,
+  sourceLineBudgets,
 } from "./model";
 import { renderIndexes, staleSchema } from "./render";
 import { liftable, unscopedDirect } from "./lift";
 import { sourceEntry, SourceError } from "./sources";
+import { planSourceBacklinks } from "../source-backlinks";
 export interface Finding {
   code: string;
   severity: "error" | "warning";
@@ -116,6 +118,7 @@ export class Checker {
     this.checkRelations();
     this.checkClaims();
     this.checkEvidence();
+    this.checkSourceBacklinks();
     this.checkIndex();
     this.checkHistory();
     return this.findings;
@@ -1005,6 +1008,27 @@ export class Checker {
           );
       }
   }
+  checkSourceBacklinks() {
+    const prefix = this.repo.layout.vault ? this.repo.layout.vault + "/" : "";
+    const relative = (p: string) => p.slice(prefix.length);
+    const plan = planSourceBacklinks(this.reg.schema,
+      this.repo.allPages().map(p => ({ path: relative(p.path), text: this.repo.store.read(p.path) })),
+      [...this.repo.cards.values()].map(c => ({ path: relative(c.path), text: this.repo.store.read(c.path) })),
+      relative(this.repo.evidence), sourceLineBudgets(this.repo));
+    for (const issue of plan.issues) this.add(issue.code, prefix + issue.path, issue.message, 1);
+    for (const patch of plan.patches) this.add("source-backlinks-stale", prefix + patch.path,
+      "cited_by differs from page sources; run Noteweaver source-backlinks", 1);
+  }
+  backlinksOnly(rel: string) {
+    if (!this.reg.schema.formats.sources_inverse || !this.repo.cards.has(rel)) return false;
+    const old = this.repo.history?.files.get(rel)?.text, next = this.repo.store.files.get(rel)?.text;
+    if (old === undefined || next === undefined) return false;
+    const a = splitFrontmatter(old), b = splitFrontmatter(next);
+    if (a.fm === null || b.fm === null || a.body !== b.body || a.bodyLine !== b.bodyLine) return false;
+    const x = readFrontmatter(old).data, y = readFrontmatter(next).data;
+    return x !== null && y !== null && ["source", "record"].includes(String(x.type)) &&
+      [...new Set([...Object.keys(x), ...Object.keys(y)])].filter(k => k !== "cited_by").every(k => eq(x[k], y[k]));
+  }
   regraded(rel: string) {
     const old = this.repo.history?.files.get(rel)?.text,
       next = this.repo.store.files.get(rel)?.text;
@@ -1013,13 +1037,15 @@ export class Checker {
     try {
       const a = splitFrontmatter(old),
         b = splitFrontmatter(next);
-      if (a.fm === null || b.fm === null || a.body !== b.body) return false;
+      if (a.fm === null || b.fm === null || a.body !== b.body ||
+          (this.reg.schema.formats.sources_inverse && a.bodyLine !== b.bodyLine)) return false;
       const x = yaml(a.fm) || {},
         y = yaml(b.fm) || {};
       return (
         ["source", "record"].includes(x.type) &&
+        (!eq(x.grade, y.grade) || !eq(x.publisher, y.publisher)) &&
         [...new Set([...Object.keys(x), ...Object.keys(y)])]
-          .filter((k) => !["grade", "publisher"].includes(k))
+          .filter((k) => !["grade", "publisher", ...(this.reg.schema.formats.sources_inverse ? ["cited_by"] : [])].includes(k))
           .every((k) => eq(x[k], y[k]))
       );
     } catch {
@@ -1134,6 +1160,7 @@ export class Checker {
     for (const [s, p] of h.changes) {
       if (inside(p, this.repo.evidence) && s !== "A") {
         if (s === "D" && approved.has(p)) {
+        } else if (s === "M" && this.backlinksOnly(p)) {
         } else if (s === "M" && this.regraded(p))
           this.warn(
             "evidence-card-regraded",

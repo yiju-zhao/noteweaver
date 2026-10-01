@@ -3,11 +3,11 @@
  * neither ctx.onChange nor processFrontMatter is exposed to the display layer. */
 import { Keymap, Notice, Plugin, setIcon, TFile } from "obsidian";
 import { readFrontmatter } from "./core";
-import { evidencePath, NESTED_KEYS, renderNested, type EvidenceLink } from "./nested";
+import { evidencePath, NESTED_KEYS, renderNested, renderSourceBacklinks, type EvidenceLink } from "./nested";
 import { nativeSources } from "./sources";
 
 const PROPERTY_ICONS: Record<string, string> = {
-  generated: "history", sources: "book-open", verified: "badge-check",
+  generated: "history", sources: "book-open", verified: "badge-check", cited_by: "link-2",
 };
 
 interface Context { key?: string; sourcePath?: string }
@@ -34,7 +34,8 @@ function redraw(plugin: Plugin) {
   }
 }
 
-export function installReadonlyProperties(plugin: Plugin, isBankPage: (file: TFile) => boolean, evidenceRoot = () => "evidence"): boolean {
+export function installReadonlyProperties(plugin: Plugin, isBankPage: (file: TFile) => boolean,
+  evidenceRoot = () => "evidence", sourceInverse = () => false): boolean {
   const manager = (plugin.app as unknown as { metadataTypeManager?: Manager }).metadataTypeManager;
   if (!manager || typeof manager.getWidget !== "function" || !manager.registeredTypeWidgets) return false;
   const unknownWidget = manager.getWidget("unknown");
@@ -50,7 +51,11 @@ export function installReadonlyProperties(plugin: Plugin, isBankPage: (file: TFi
       const file = ctx.sourcePath && plugin.app.vault.getAbstractFileByPath(ctx.sourcePath);
       const native = ctx.key === "sources" && file instanceof TFile &&
         nativeSources(plugin.app.metadataCache.getFileCache(file)?.frontmatter?.sources);
-      if (!active || !ctx.key || !NESTED_KEYS.has(ctx.key) || native || !(file instanceof TFile) || !isBankPage(file)) {
+      const citation = ctx.key === "cited_by" && sourceInverse() && file instanceof TFile &&
+        file.path.startsWith(evidenceRoot() + "/") &&
+        ["source", "record"].includes(String(plugin.app.metadataCache.getFileCache(file)?.frontmatter?.type));
+      if (!active || !ctx.key || (!citation && (!NESTED_KEYS.has(ctx.key) || native ||
+          !(file instanceof TFile) || !isBankPage(file)))) {
         pending.delete(el);
         if (el.classList.contains("noteweaver-nested")) {
           el.classList.remove("noteweaver-nested");
@@ -58,6 +63,7 @@ export function installReadonlyProperties(plugin: Plugin, isBankPage: (file: TFi
         }
         return original.call(this, el, value, ctx);
       }
+      if (!(file instanceof TFile)) return original.call(this, el, value, ctx);
       const key = ctx.key;
       const token = {};
       pending.set(el, token);
@@ -74,6 +80,18 @@ export function installReadonlyProperties(plugin: Plugin, isBankPage: (file: TFi
         if (icon) setIcon(icon, PROPERTY_ICONS[key]);
         const { data, error } = readFrontmatter(text);
         if (error) { el.textContent = error; return; }
+        if (citation) {
+          renderSourceBacklinks(el, data?.cited_by, path => {
+            const target = plugin.app.vault.getAbstractFileByPath(path);
+            if (!(target instanceof TFile) || !isBankPage(target)) return;
+            const fm = plugin.app.metadataCache.getFileCache(target)?.frontmatter;
+            return { path, title: typeof fm?.title === "string" ? fm.title : target.basename };
+          }, (link, event) => {
+            const target = plugin.app.vault.getAbstractFileByPath(link.path);
+            if (target instanceof TFile) void plugin.app.workspace.getLeaf(event.button === 1 || Keymap.isModEvent(event) ? "tab" : false).openFile(target);
+          });
+          return;
+        }
         const links = new Map<string, EvidenceLink>();
         const sources = key === "sources" && Array.isArray(data?.sources) ? data.sources : [];
         await Promise.all(sources.map(async (entry: unknown) => {

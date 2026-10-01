@@ -21,18 +21,18 @@ export function parseArgs(args: string[]) {
     else throw new Error(`unexpected argument ${a}`);
   }
   if (
-    !["check", "index", "schema", "lift", "sources", "refs", "info", "review"].includes(
+    !["check", "index", "schema", "lift", "sources", "source-backlinks", "refs", "info", "review"].includes(
       operation ?? "",
     )
   )
-    throw new Error("choose check, index, schema, lift, sources, refs, info, or review");
+    throw new Error("choose check, index, schema, lift, sources, source-backlinks, refs, info, or review");
   request.operation = operation as Request["operation"];
   return { root, offline, json, request };
 }
 export function main(args: string[]) {
   if (args.includes("--help") || !args.length) {
     console.log(
-      "Noteweaver offline runner: node cli.cjs [--root VAULT] --offline <check|index|schema|refs|lift|sources|info|review> [--json] [--base REV] [--check] [--dry-run]\nRequires --offline for CI and isolated fixtures. Daily use: obsidian vault=<name> command id=noteweaver:check; use Obsidian eval for parameters and JSON.",
+      "Noteweaver offline runner: node cli.cjs [--root VAULT] --offline <check|index|schema|refs|lift|sources|source-backlinks|info|review> [--json] [--base REV] [--check] [--dry-run]\nRequires --offline for CI and isolated fixtures. Daily use: obsidian vault=<name> command id=noteweaver:check; use Obsidian eval for parameters and JSON.",
     );
     return 0;
   }
@@ -69,6 +69,9 @@ export function main(args: string[]) {
       console.log(
         `Noteweaver check: ${result.data.pages} pages, ${result.data.claims} claims, ${result.data.cards} evidence cards: ${result.data.errors} errors, ${result.data.warnings} warnings`,
       );
+    } else if (request.operation === "source-backlinks") {
+      console.log(`Noteweaver source-backlinks: ${request.dryRun ? "would update" : "updated"} ${result.data.cards} cards`);
+      for (const f of result.data.errors) console.log(`${f.path}: [${f.code}] ${f.message}`);
     } else if (request.operation === "sources") {
       console.log(`Noteweaver sources: ${request.dryRun ? "would migrate" : "migrated"} ${result.data.pages} pages`);
       for (const f of result.data.errors) console.log(`${f.path}: [${f.code}] ${f.message}`);

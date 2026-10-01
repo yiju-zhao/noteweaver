@@ -8,6 +8,7 @@ from unittest.mock import patch
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
+VERSION = json.loads((ROOT / 'manifest.json').read_text())['version']
 spec = importlib.util.spec_from_file_location('installer', ROOT / 'scripts/install.py')
 installer = importlib.util.module_from_spec(spec); spec.loader.exec_module(installer)
 
@@ -21,7 +22,7 @@ class InstallationTests(unittest.TestCase):
         self.destination = self.vault / '.obsidian/plugins/noteweaver'; self.destination.mkdir(parents=True)
         self.state = b'{"actor":"human:demo","relations":{"edges":[]}}'
         (self.destination / 'data.json').write_bytes(self.state)
-        self.lock = {'repository':'yiju-zhao/noteweaver', 'version':'0.12.0', 'schema_version':3,
+        self.lock = {'repository':'yiju-zhao/noteweaver', 'version':VERSION, 'schema_version':3,
                      'source_commit':'a'*40, 'assets':{p:installer.digest((ROOT/'dist'/p).read_bytes()) for p in installer.ASSETS}}
         self.plugin = self.root / '.agents/plugins/noteweaver'
     def install(self, **kw):
@@ -88,7 +89,7 @@ class InstallationTests(unittest.TestCase):
     def test_bundle_corruption_fails_inventory_validation(self):
         files=installer.unpack((ROOT/'dist/agent-plugin.zip').read_bytes())
         files['skills/noteweaver-query/SKILL.md']=b'changed'
-        with self.assertRaisesRegex(ValueError,'checksum'):installer.validate_bundle(files,'0.12.0')
+        with self.assertRaisesRegex(ValueError,'checksum'):installer.validate_bundle(files,VERSION)
     def test_fallback_mode_materializes_same_skills_without_another_source_tree(self):
         self.install(mode='skills')
         self.assertEqual((self.root/'.agents/skills/noteweaver-query/SKILL.md').read_bytes(),(self.plugin/'skills/noteweaver-query/SKILL.md').read_bytes())

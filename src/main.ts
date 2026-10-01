@@ -12,6 +12,7 @@ import {
 } from "obsidian";
 import * as core from "./core";
 import { applyRelationPlan, checkRelations, planRelations, readRelationState, type RelationIssue, type RelationState } from "./relations";
+import { planSourceBacklinks, readSourceLines } from "./source-backlinks";
 import { installReadonlyProperties } from "./property-adapter";
 
 const VIEW = "noteweaver-findings";
@@ -50,6 +51,7 @@ export default class Noteweaver extends Plugin {
   private refreshSoon = debounce(() => void this.refresh(), 300, true);
   private syncSoon = debounce(() => void this.syncRelations(), 500, true);
   private relationState?: RelationState;
+  private sourceLines: Record<string, number> = {};
   private relationRenames = new Map<string, string>();
   private syncing: Promise<void> | null = null;
   private syncAgain = false;
@@ -61,6 +63,7 @@ export default class Noteweaver extends Plugin {
     const saved = await this.loadData();
     this.settings = { actor: typeof saved?.actor === "string" ? saved.actor : DEFAULTS.actor };
     this.relationState = readRelationState(saved?.relations);
+    this.sourceLines = readSourceLines(saved?.sourceLines);
     this.addSettingTab(new NoteweaverSettings(this.app, this));
     this.registerView(VIEW, (leaf) => new FindingsView(leaf, this));
     this.statusEl = this.addStatusBarItem();
@@ -98,21 +101,22 @@ export default class Noteweaver extends Plugin {
       this.registerEvent(this.app.metadataCache.on("changed", (f) => {
         this.all?.delete(f.path);
         if (f.path === this.app.workspace.getActiveFile()?.path) this.refreshSoon();
-        if (this.specFor(f)) this.syncSoon();
+        if (this.specFor(f) || this.isEvidenceCard(f)) this.syncSoon();
       }));
       this.registerEvent(this.app.vault.on("delete", (f) => {
-        if (f instanceof TFile && this.specFor(f)) this.syncSoon();
+        if (f instanceof TFile && (this.specFor(f) || this.isEvidenceCard(f))) this.syncSoon();
       }));
       this.registerEvent(this.app.vault.on("rename", (f, oldPath) => {
         if (!(f instanceof TFile) || !this.schema) return;
-        if (core.specFor(this.schema, oldPath) || this.specFor(f)) {
+        if (core.specFor(this.schema, oldPath) || this.specFor(f) || this.isEvidenceCard(f)) {
           const oldName = core.pageName(oldPath);
           if (oldName !== f.basename) this.relationRenames.set(oldName, f.basename);
           this.syncSoon();
         }
       }));
       await this.refresh();
-      if (!installReadonlyProperties(this, (file) => Boolean(this.specFor(file)), () => this.evidenceRoot)) {
+      if (!installReadonlyProperties(this, (file) => Boolean(this.specFor(file)), () => this.evidenceRoot,
+          () => this.schema?.formats.sources_inverse === "cited_by")) {
         new Notice("Noteweaver：当前 Obsidian 不支持只读嵌套展示，请在源码中查看 generated、sources、verified", 10000);
       }
       await this.syncRelations();
@@ -126,7 +130,7 @@ export default class Noteweaver extends Plugin {
 
   async saveSettings() {
     if (this.syncing) await this.syncing;
-    await this.saveData({ ...this.settings, relations: this.relationState });
+    await this.saveData({ ...this.settings, relations: this.relationState, sourceLines: this.sourceLines });
   }
 
   /** Serialize vault-wide reconciliation; native metadata events request another
@@ -142,7 +146,15 @@ export default class Noteweaver extends Plugin {
         if (!this.schema || this.stopped) return;
         const pages = await Promise.all(this.app.vault.getMarkdownFiles().filter((f) => this.specFor(f))
           .map(async (f) => ({ path: f.path, text: await this.app.vault.read(f) })));
-        const plan = planRelations(this.schema, pages, this.relationState, this.relationRenames);
+        const relations = planRelations(this.schema, pages, this.relationState, this.relationRenames);
+        const cards = this.schema.formats.sources_inverse ? await Promise.all(this.app.vault.getMarkdownFiles()
+          .filter(f => this.isEvidenceCard(f) && ["source", "record"].includes(String(this.app.metadataCache.getFileCache(f)?.frontmatter?.type)))
+          .map(async f => ({ path: f.path, text: await this.app.vault.read(f) }))) : [];
+        const sourceLines = this.schema.formats.sources_inverse ? Object.fromEntries(cards.sort((a,b) => a.path.localeCompare(b.path))
+          .map(c => [c.path, this.sourceLines[c.path] ?? core.splitFrontmatter(c.text).bodyLine])) : this.sourceLines;
+        const backlinks = planSourceBacklinks(this.schema, pages, cards, this.evidenceRoot, new Map(Object.entries(sourceLines)));
+        const plan = { ...relations, patches: [...relations.patches, ...backlinks.patches],
+          issues: [...relations.issues, ...backlinks.issues] };
         this.relationIssues = plan.issues;
         this.renderStatus();
         this.views().forEach((v) => v.render());
@@ -160,9 +172,11 @@ export default class Noteweaver extends Plugin {
             await this.app.vault.process(file, transform);
           },
           checkpoint: async (state) => {
-            if (JSON.stringify(state) !== JSON.stringify(this.relationState)) {
-              await this.saveData({ ...this.settings, relations: state });
+            if (JSON.stringify(state) !== JSON.stringify(this.relationState) ||
+                JSON.stringify(sourceLines) !== JSON.stringify(this.sourceLines)) {
+              await this.saveData({ ...this.settings, relations: state, sourceLines });
               this.relationState = state;
+              this.sourceLines = sourceLines;
             }
           },
         });
@@ -223,6 +237,11 @@ export default class Noteweaver extends Plugin {
 
   specFor(file: TFile): core.DirSpec | undefined {
     return this.schema ? core.specFor(this.schema, file.path) : undefined;
+  }
+
+  private isEvidenceCard(file: TFile): boolean {
+    return Boolean(this.schema?.formats.sources_inverse && file.path.startsWith(this.evidenceRoot + "/") &&
+      /^(sources|records)\/[^/]+\/[^/]+\.md$/.test(file.path.slice(this.evidenceRoot.length + 1)));
   }
 
   /** Bank pages by name, from Obsidian's metadata cache; a duplicated name resolves to nothing, as in kb. */
