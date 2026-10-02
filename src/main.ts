@@ -14,6 +14,9 @@ import * as core from "./core";
 import { applyRelationPlan, checkRelations, planRelations, readRelationState, type RelationIssue, type RelationState } from "./relations";
 import { planSourceBacklinks, readSourceLines } from "./source-backlinks";
 import { installReadonlyProperties } from "./property-adapter";
+import { HtmlView, HTML_VIEW } from "./html-view";
+import { inside } from "./bank/model";
+import { presentationMove } from "./presentation";
 
 const VIEW = "noteweaver-findings";
 
@@ -66,6 +69,12 @@ export default class Noteweaver extends Plugin {
     this.sourceLines = readSourceLines(saved?.sourceLines);
     this.addSettingTab(new NoteweaverSettings(this.app, this));
     this.registerView(VIEW, (leaf) => new FindingsView(leaf, this));
+    this.registerView(HTML_VIEW, (leaf) => new HtmlView(leaf, (path) => this.runsScripts(path)));
+    try {
+      this.registerExtensions(["html"], HTML_VIEW);
+    } catch (e) {
+      new Notice(`Noteweaver：无法接管 .html，展示产物不能在 vault 内打开：${(e as Error).message}`, 10000);
+    }
     this.statusEl = this.addStatusBarItem();
     this.statusEl.addClass("noteweaver-status", "mod-clickable");
     this.registerDomEvent(this.statusEl, "click", () => void this.openView());
@@ -107,6 +116,7 @@ export default class Noteweaver extends Plugin {
         if (f instanceof TFile && (this.specFor(f) || this.isEvidenceCard(f))) this.syncSoon();
       }));
       this.registerEvent(this.app.vault.on("rename", (f, oldPath) => {
+        if (f instanceof TFile) void this.movePresentation(f, oldPath);
         if (!(f instanceof TFile) || !this.schema) return;
         if (core.specFor(this.schema, oldPath) || this.specFor(f) || this.isEvidenceCard(f)) {
           const oldName = core.pageName(oldPath);
@@ -233,6 +243,30 @@ export default class Noteweaver extends Plugin {
       }
     }
     this.applyIcons();
+  }
+
+  /** Only a bank's own HTML may run scripts (inside the frame's sandbox); evidence originals and anything else are shown static. */
+  async runsScripts(path: string) {
+    await this.loadSchema();
+    return this.schema !== null && inside(path, this.schemaBank);
+  }
+
+  /** A page's same-name HTML presentation follows the page when Obsidian renames or moves it; Obsidian rewrites the
+   * markdown links to it. Links inside other HTML files are left to the check. */
+  private async movePresentation(page: TFile, oldPath: string) {
+    await this.loadSchema();
+    const move = this.schema && presentationMove(oldPath, page.path, this.schemaBank);
+    const html = move && this.app.vault.getAbstractFileByPath(move[0]);
+    if (!move || !(html instanceof TFile)) return;
+    if (this.app.vault.getAbstractFileByPath(move[1])) {
+      new Notice(`Noteweaver：${move[1]} 已存在，${move[0]} 没有跟着页面移动`, 10000);
+      return;
+    }
+    try {
+      await this.app.fileManager.renameFile(html, move[1]);
+    } catch (e) {
+      new Notice(`Noteweaver：${move[0]} 没有跟着页面移动：${(e as Error).message}`, 10000);
+    }
   }
 
   specFor(file: TFile): core.DirSpec | undefined {
