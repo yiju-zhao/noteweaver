@@ -1,7 +1,7 @@
 {
   "id": "noteweaver",
   "name": "Noteweaver",
-  "version": "0.13.1",
+  "version": "0.14.0",
   "minAppVersion": "1.12.7",
   "description": "Schema-driven page types, validation, bidirectional relations and read-only evidence properties.",
   "author": "yiju-zhao",
