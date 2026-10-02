@@ -33,6 +33,8 @@ test("a page's same-name HTML is allowed; every other non-md file in the bank is
     "bank/index.html": "<p>index is not a page</p>",
     "bank/.gitkeep": "",
     "bank/concepts/.DS_Store": "",
+    "bank/concepts/overview.base": "views: []",
+    "bank/concepts/map.canvas": "{}",
   });
   assert.deepEqual(attachments(findings).sort(), [
     "bank/concepts/example-concept.html.png", "bank/concepts/example-concept.json",

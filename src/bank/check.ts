@@ -215,13 +215,14 @@ export class Checker {
               1,
             );
   }
-  /** Besides md pages the bank holds one thing: a page's same-name .html presentation. */
+  /** Besides md pages (and Obsidian's own .base/.canvas view files) the bank holds one thing: a page's
+   * same-name .html presentation. */
   checkAttachments() {
     const { bank, evidence, store, pages } = this.repo;
     for (const [path, record] of store.files) {
       if (
         !inside(path, bank) ||
-        path.endsWith(".md") ||
+        /\.(md|base|canvas)$/.test(path) ||
         path
           .slice(bank.length + 1)
           .split("/")
