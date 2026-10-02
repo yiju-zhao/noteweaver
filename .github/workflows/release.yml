@@ -28,4 +28,4 @@ jobs:
       - name: Create draft release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" dist/main.js dist/manifest.json dist/styles.css dist/validation.cjs dist/runtime.zip dist/agent-plugin.zip dist/installer.py dist/tools.lock.json dist/SHA256SUMS THIRD_PARTY_NOTICES.md --draft --verify-tag --generate-notes
+        run: gh release create "$GITHUB_REF_NAME" dist/main.js dist/manifest.json dist/styles.css dist/validation.cjs dist/runtime.zip dist/agent-plugin.zip dist/installer.py dist/tools.lock.json dist/SHA256SUMS THIRD_PARTY_NOTICES.md LICENSE --draft --verify-tag --generate-notes

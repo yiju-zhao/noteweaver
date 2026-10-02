@@ -28,6 +28,6 @@ The generic research workflow retains its upstream MIT attribution in `skills/no
 | agent-browser | vercel-labs/agent-browser wrapper d01253d9db28d75080e36da3c1c31ef89454731e; CLI 0.38.1 | Apache-2.0; skills/agent-browser/LICENSE |
 | obsidian-bases | kepano/obsidian-skills 3ccff5338ea700537839b21900aa5358a0402c98 | MIT; skills/obsidian-bases/LICENSE |
 | archify | tt-a1i/archify v2.16.0 | MIT; skills/archify/LICENSE; runtime archive SHA-256 pinned in scripts/package_runtime.mjs |
-| explainer | yiju-zhao/agent-skills 2a02e94 | No upstream license declared; authorship retained, no relicensing; skills/explainer/UPSTREAM.md |
+| explainer | yiju-zhao/agent-skills 2a02e94 | Written by the Noteweaver owner; covered by this repository's MIT license; skills/explainer/UPSTREAM.md |
 
 Runtime dependencies keep their own notices. No browser profile, authentication state or knowledge-bank content is bundled.

@@ -80,3 +80,9 @@ The build creates `runtime.zip` (programs), `agent-plugin.zip` (skills and tools
 `installer.py`, the Obsidian assets and `SHA256SUMS`. CI tests the same release
 artifacts. A tagged release also includes a source-pinned `tools.lock.json`.
 Third-party attributions are in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
+## License
+
+Noteweaver is released under the [MIT License](LICENSE). Bundled third-party skills and
+dependencies keep their own licenses; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)
+and the `LICENSE` file inside each `skills/*/` folder.
