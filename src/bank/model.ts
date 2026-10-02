@@ -74,6 +74,40 @@ export function links(line: string) {
     .filter((t) => !/^([a-zA-Z][a-zA-Z0-9+.-]*:|#)/.test(t))
     .map((t) => t.split("#")[0]);
 }
+/** Relative file references (`href`, `src`) in the static tags of an HTML document, with 1-based lines.
+ * Comments, script/style text and quoted attribute values such as `srcdoc` are not scanned. */
+export function htmlLinks(html: string): Array<{ target: string; line: number }> {
+  const out: Array<{ target: string; line: number }> = [],
+    tags = /<!--[\s\S]*?(?:-->|$)|<([a-zA-Z][^\s/>]*)((?:"[^"]*"|'[^']*'|[^>"'])*)>/g;
+  let line = 1,
+    seen = 0;
+  for (let tag; (tag = tags.exec(html)); ) {
+    if (!tag[1]) continue;
+    line += html.slice(seen, tag.index).split("\n").length - 1;
+    seen = tag.index;
+    for (const attr of tag[2].matchAll(
+      /([^\s=/"'>]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'>]+)))?/g,
+    )) {
+      if (!["href", "src"].includes(attr[1].toLowerCase())) continue;
+      const value = (attr[2] ?? attr[3] ?? attr[4] ?? "").trim(),
+        path = value.split(/[?#]/)[0];
+      if (!path || value.startsWith("//") || /^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(value))
+        continue;
+      try {
+        out.push({ target: decodeURIComponent(path), line });
+      } catch {
+        out.push({ target: path, line });
+      }
+    }
+    const name = tag[1].toLowerCase();
+    if (["script", "style", "textarea", "title"].includes(name)) {
+      const end = new RegExp(`</${name}\\b`, "gi");
+      end.lastIndex = tags.lastIndex;
+      tags.lastIndex = end.exec(html)?.index ?? html.length;
+    }
+  }
+  return out;
+}
 export function claimsBlock(
   body: string,
 ): { text: string; start: number; error: string } | undefined {

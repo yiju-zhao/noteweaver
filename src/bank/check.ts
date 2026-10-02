@@ -23,6 +23,7 @@ import {
   resolveLink,
   prose,
   links,
+  htmlLinks,
   yaml,
   timestamp,
   ACTOR,
@@ -94,6 +95,7 @@ export class Checker {
   }
   run() {
     this.checkPages();
+    this.checkAttachments();
     for (const p of this.repo.allPages()) {
       const path = this.repo.layout.vault
         ? p.path.slice(this.repo.layout.vault.length + 1)
@@ -209,6 +211,42 @@ export class Checker {
                 .join(", ")}`,
               1,
             );
+  }
+  /** Besides md pages the bank holds one thing: a page's same-name .html presentation. */
+  checkAttachments() {
+    const { bank, evidence, store, pages } = this.repo;
+    for (const [path, record] of store.files) {
+      if (
+        !inside(path, bank) ||
+        path.endsWith(".md") ||
+        path
+          .slice(bank.length + 1)
+          .split("/")
+          .some((s) => s.startsWith("."))
+      )
+        continue;
+      const owner = path.slice(0, -5) + ".md";
+      if (!path.endsWith(".html") || !pages.get(stem(owner))?.some((p) => p.path === owner)) {
+        this.add(
+          "attachment",
+          path,
+          "only md pages and a page's same-name .html presentation belong in the bank",
+        );
+        continue;
+      }
+      for (const { target, line } of htmlLinks(record.text ?? "")) {
+        const link = resolveLink(path, target);
+        if (!store.exists(link))
+          this.add("link-broken", path, `link target '${target}' does not exist`, line);
+        else if (!(inside(link, bank) || inside(link, evidence)))
+          this.add(
+            "link-outside",
+            path,
+            `link '${target}' leaves the bank and evidence directories`,
+            line,
+          );
+      }
+    }
   }
   checkLocation(p: Page) {
     const t = p.fm.type,

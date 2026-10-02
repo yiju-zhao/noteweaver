@@ -49,7 +49,10 @@ alone does not establish success. See the [automation reference](skills/noteweav
 Failed desktop connections never switch to filesystem writes.
 
 Native Properties support directory-bound types, inverse relations and evidence
-links. Claims render in reading view. Schemas are format version 3; see
+links. Claims render in reading view. A page's same-name `.html` presentation opens
+read-only in its own tab inside a sandboxed frame (scripts run only for the bank's own
+HTML, never for evidence originals) and moves with the page when Obsidian renames it;
+the check rejects any other non-md file in the bank. Schemas are format version 3; see
 [schema format](docs/schema.md). The starter template defines a minimal vocabulary
 for seven kinds. A structure check does not verify the truth of cited facts.
 
