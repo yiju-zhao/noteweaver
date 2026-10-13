@@ -16,7 +16,7 @@ description: 收录材料、创建或修改 Noteweaver 知识页，处理弃用�
 2. 按 `kinds.md` 判别内容单元，按 resource、页面名、title 和 aliases 查重。对应对象已有页面时归到该页。
 3. 按 `attributes.md` 决定 frontmatter 或 Claim 的放置。值与现有同属性同范围内容冲突时交给人；已有 Claim 的不可变字段按 `claims.md` 处理。
 4. 按实例 schema 与 evidence.md 登记来源和正文脚注。`formats.sources: wikilink` 时，sources 为完整卡片路径的原生链接列表，链接别名保留页内 ID；脚注和 Claim 的 source 使用同一 ID。改动页写本次 generated，保持数量的原始字符串、尾零及引号；嵌套 YAML 和精确数值通过源码编辑，避免属性面板重写。
-5. 运行 Noteweaver 的 `index` 请求，按 `navigation.md` 更新日志，再运行 `check` 请求。错误清零，逐项处理警告；输出包含修改页面、证据和仍待人决定的事项。
+5. 运行 Noteweaver 的 `index` 请求；若改了页面 title 或 description，用 `refs` 找到引用它的 Topic 页，按实例 `navigation.md` 同步要求取自目标页的链接标题和描述。`index` 只更新目录索引，Topic 的分组与选页仍由人或 agent 维护。按导航规则更新日志，再运行 `check` 请求。错误清零，逐项处理警告；输出包含修改页面、证据和仍待人决定的事项。
 
 ## 改名、删除、合并
 

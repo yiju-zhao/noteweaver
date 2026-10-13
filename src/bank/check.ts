@@ -190,12 +190,7 @@ export class Checker {
         ]);
       if (truth(fm.resource))
         resources.set(fm.resource, [...(resources.get(fm.resource) || []), p]);
-      if (new TextEncoder().encode(p.body).length > 32768)
-        this.warn(
-          "page-size",
-          p.rel,
-          "body is over 32 KB; split the page or read it by section",
-        );
+      this.checkPageSize(p);
       this.checkBody(p);
     }
     for (const [k, table] of [
@@ -399,6 +394,40 @@ export class Checker {
         p.rel,
         "topic pages only link; no footnotes or sources",
       );
+  }
+  checkPageSize(p: Page) {
+    const encoder = new TextEncoder(), limit = 32768;
+    const bytes = encoder.encode(p.body).length;
+    if (bytes <= limit) return;
+    const lines = p.body.split("\n");
+    // Use prose only to locate headings outside code fences; measure the original
+    // text so diagrams, code blocks and inline code still consume the read budget.
+    const headings = [...prose(p.body)]
+      .filter(([, line]) => /^ {0,3}##(?:[\t ]|$)/.test(line))
+      .map(([i]) => i);
+    if (!headings.length) {
+      this.warn("page-size", p.rel,
+        `body is ${bytes} bytes (limit ${limit}); no H2 sections; read a bounded line range or organize into sections`,
+        p.body_line);
+      return;
+    }
+    const starts = [...new Set([0, ...headings])];
+    const sections = starts.map((start, i) => {
+      const end = starts[i + 1] ?? lines.length;
+      const text = lines.slice(start, end).join("\n") + (end < lines.length ? "\n" : "");
+      return {
+        start,
+        end: end === lines.length && lines.at(-1) === "" ? end - 1 : end,
+        bytes: encoder.encode(text).length,
+        title: headings.includes(start) ? lines[start].trim() : "preamble",
+      };
+    });
+    const largest = sections.reduce((a, b) => a.bytes >= b.bytes ? a : b);
+    const start = p.body_line + largest.start, end = p.body_line + largest.end - 1;
+    this.warn("page-size", p.rel,
+      `body is ${bytes} bytes (limit ${limit}); read by section; largest section "${largest.title}" ` +
+      `L${start}-L${end} is ${largest.bytes} bytes` +
+      (largest.bytes > limit ? "; read smaller subsections or bounded line ranges" : ""), start);
   }
   checkVerified(rel: string, value: any, line: number, mapping = false) {
     if (value == null) return;
