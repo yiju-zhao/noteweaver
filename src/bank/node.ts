@@ -89,6 +89,16 @@ export function git(root: string, ...args: string[]) {
     throw new Error(r.stderr.toString().trim() || "git failed");
   return r.stdout;
 }
+/** Infer the supported vault/repository relationship before an instance exists. */
+export function repositoryRootForVault(vault: string): "." | ".." {
+  vault = realPath(path.resolve(vault));
+  let root: string;
+  try { root = realPath(git(vault, "rev-parse", "--show-toplevel").toString().trim()); }
+  catch { return "."; }
+  if (root === vault) return ".";
+  if (root === path.dirname(vault)) return "..";
+  throw new Error("vault must be the repository root or its direct child; select the repository-named vault");
+}
 export function history(instance: Instance, base = "HEAD"): History {
   const h: History = {
     base,

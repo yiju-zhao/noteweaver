@@ -193,43 +193,43 @@
   "attributes": {},
   "predicates": {},
   "directories": {
-    "bank/concepts": {
+    "pages/concepts": {
       "type": "concept",
       "class": null,
       "required": [],
       "icon": "file-text"
     },
-    "bank/events": {
+    "pages/events": {
       "type": "event",
       "class": null,
       "required": [],
       "icon": "file-text"
     },
-    "bank/methods": {
+    "pages/methods": {
       "type": "method",
       "class": null,
       "required": [],
       "icon": "file-text"
     },
-    "bank/analyses": {
+    "pages/analyses": {
       "type": "analysis",
       "class": null,
       "required": [],
       "icon": "file-text"
     },
-    "bank/questions": {
+    "pages/questions": {
       "type": "question",
       "class": null,
       "required": [],
       "icon": "file-text"
     },
-    "bank/topics": {
+    "pages/topics": {
       "type": "topic",
       "class": null,
       "required": [],
       "icon": "file-text"
     },
-    "bank/entities/objects": {
+    "pages/entities/objects": {
       "type": "entity",
       "class": "object",
       "required": [],

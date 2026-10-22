@@ -14,6 +14,11 @@ replaceable tool installations.
 
 Install from a published [release](https://github.com/yiju-zhao/noteweaver/releases),
 or build the release assets with the development commands below.
+New knowledge repositories use `<repository>/<repository-name>/` as the Obsidian
+vault, containing `pages/`, `evidence/` and `.noteweaver/`. The vault name matches
+the repository directory name; `paths.bank` is the configuration key whose new
+default value is `pages`. Existing instances retain their configured paths until
+an explicit [layout refactor](skills/noteweaver-init/references/layout.md).
 Place the release assets in `./release`, verify `SHA256SUMS`, and put
 `tools.lock.json` in `<vault>/.noteweaver/`. Run the verified installer:
 
@@ -40,7 +45,7 @@ See [installation and migration](docs/instances.md) for marketplace setup,
 dependencies, instance binding, explicit migration and rollback.
 
 For an empty vault, ask an agent: “Use noteweaver-init to create a knowledge bank
-at `/absolute/vault` for my selected collection scope.” For an existing vault:
+at `/absolute/my-repo/my-repo` for my selected collection scope.” For an existing vault:
 “Use noteweaver-init to inspect `/absolute/vault`, plan how to preserve and adopt
 my notes, then convert the selected scope and verify it.” The skill covers
 inventory, scope and vocabulary mapping, recoverable batches, evidence and link

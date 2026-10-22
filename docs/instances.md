@@ -7,12 +7,12 @@ parser. All content paths are relative to the vault and must stay inside it:
 ```json
 {
   "version": 1,
-  "name": "Research notebook",
+  "name": "research-notebook",
   "vault_name": "research-notebook",
   "repository_root": "..",
   "paths": {
     "schema": ".noteweaver/schema.json",
-    "bank": "bank",
+    "bank": "pages",
     "evidence": "evidence",
     "policies": ".noteweaver/policies",
     "review": ".noteweaver/review"
@@ -22,8 +22,14 @@ parser. All content paths are relative to the vault and must stay inside it:
 }
 ```
 
-`repository_root` is `.` for a standalone vault or `..` for a vault directly inside
-its repository. The descriptor may also declare `commands.research_setup` and
+New repositories use `<repository>/<repository-name>/` as the vault, with
+`pages/`, `evidence/`, `.noteweaver/` and `.obsidian/` inside it. The vault name
+matches the repository directory name; the display name defaults to that name.
+`repository_root` is `..` for this child vault, or `.` when the repository itself
+is the selected vault. `paths.bank` remains the configuration key for the knowledge
+page root; new initialization explicitly writes `pages`. Older descriptors that
+omit this key still resolve it to `bank`, preserving their existing content.
+The descriptor may also declare `commands.research_setup` and
 `research_skills`. Commands are repository-relative and belong to that instance.
 The context helper returns absolute top-level `paths` and vault-relative
 `config.paths`. The instance owns schema, policies, review records and release pin;
@@ -84,8 +90,8 @@ With Noteweaver enabled in the running vault, first inspect without writing:
 
 ```javascript
 await app.plugins.plugins.noteweaver.runAutomation({
-  operation: "onboard", vault: "/absolute/vault",
-  initialize: { name: "Research notebook", repositoryRoot: "." }
+  operation: "onboard", vault: "/absolute/research-notebook/research-notebook",
+  initialize: { repositoryRoot: ".." }
 });
 ```
 
@@ -113,14 +119,21 @@ For a new instance, preview structure creation using the chosen settings:
 
 ```javascript
 await app.plugins.plugins.noteweaver.runAutomation({
-  operation: "init", vault: "/absolute/vault", dryRun: true,
-  initialize: { name: "Research notebook", repositoryRoot: "." }
+  operation: "init", vault: "/absolute/research-notebook/research-notebook", dryRun: true,
+  initialize: { repositoryRoot: ".." }
 });
 ```
 
 `initialize.paths` customizes directory names and `initialize.schema` supplies a
-complete schema. Omit `dryRun` to apply an authorized plan through Obsidian. The
-kernel produces config, schema, starter policies, indexes and log. Existing files
+complete schema. The desktop adapter supplies the running vault name and, when
+`repositoryRoot` is omitted, infers `.` or `..` from Git (falling back to `.` when
+no Git repository is found). New child vault names must match their repository
+directory; initialize the correctly named vault after opening it in Obsidian.
+Pure kernel callers must supply `name` or `vaultName`; there is no generic display
+name fallback. Omit `dryRun` to apply an authorized plan through Obsidian. The
+kernel produces config, schema, starter policies, indexes, log and `.gitkeep`
+files in evidence/sources and evidence/records so the empty structure survives a
+Git clone. Existing files
 with different contents produce conflicts and no writes; matching files are
 retained. Repeating initialization is idempotent until the instance customizes a
 starter file, at which point initialization reports the difference instead of
@@ -129,6 +142,15 @@ resetting it. Ordinary updates use the normal editing operations.
 Run `check` afterwards. The newly created policies belong to the instance and
 must describe its actual collection scope. Empty Git history is reported as a
 warning: structural validity does not imply append-only history was checked.
+
+Layout changes follow the [layout refactor workflow](../skills/noteweaver-init/references/layout.md).
+The runtime has no `refactor` operation: changing paths in an init request reports
+conflicts rather than moving content. Agents plan and apply directory moves,
+configuration, links and installation bindings, then compare evidence hashes by
+old-to-new path mapping. Current Git checks use current configured paths and do
+not establish historical preservation across a root rename. Repository-level
+README, Agent contracts, setup, CI, hooks and consumer tests are also outside the
+init generator's output.
 
 ## Migrate Noteweave and older instances
 

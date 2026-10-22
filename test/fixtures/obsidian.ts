@@ -4,7 +4,7 @@ export class FileSystemAdapter {
   folders = new Set<string>();
   writes: string[] = [];
   constructor(entries: Iterable<[string, string]> = []) { this.files = new Map(entries); }
-  getBasePath() { return "/synthetic/vault"; }
+  getBasePath() { return "/synthetic/fixture"; }
   async stat(path: string) {
     if (this.files.has(path)) return { type: "file" };
     if (this.folders.has(path) || [...this.files.keys()].some(p => p.startsWith(path + "/"))) return { type: "folder" };

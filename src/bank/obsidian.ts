@@ -12,7 +12,7 @@ import {
   links,
   resolveLink,
 } from "./model";
-import { history, loadInstance, record } from "./node";
+import { history, loadInstance, record, repositoryRootForVault } from "./node";
 import { execute, Request, Result } from "./operations";
 import { initialFiles, LEGACY_INIT_PATHS, planInitialization } from "../initialize";
 import { INSTANCE_CONFIG, readInstanceConfig } from "../instance";
@@ -45,6 +45,13 @@ export class ObsidianBank {
         const descriptor = request.operation === "onboard" && (await adapter.stat(INSTANCE_CONFIG))?.type === "file"
           ? await adapter.read(INSTANCE_CONFIG) : null;
         const config = descriptor != null ? readInstanceConfig(descriptor) : undefined;
+        if (!config) {
+          options.repositoryRoot ??= repositoryRootForVault(adapter.getBasePath());
+          const repository = path.resolve(adapter.getBasePath(), options.repositoryRoot ?? ".");
+          const repositoryName = path.basename(repository);
+          if (options.vaultName !== repositoryName)
+            throw new Error(`vault name must match repository directory '${repositoryName}'; open ${path.join(repository, repositoryName)} as the vault before initialization`);
+        }
         // An existing instance is inspected against its own schema, never a proposed template.
         const initial = config ? undefined : initialFiles(options);
         const files = initial ? Object.keys(initial.files) : [INSTANCE_CONFIG, config!.paths.schema];

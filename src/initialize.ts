@@ -14,9 +14,12 @@ export interface InitOptions {
 }
 export const LEGACY_INIT_PATHS = [".kb", ".noteweave", ".obsidian/kb-schema.json"];
 export function initialFiles(options: InitOptions = {}) {
+  const name = options.name ?? options.vaultName;
+  if (typeof name !== "string" || !name.trim()) throw new Error("initialize requires a name or vaultName from the target repository");
   const config = readInstanceConfig(JSON.stringify({ version: 1,
-    name: options.name ?? "Knowledge bank", vault_name: options.vaultName,
-    repository_root: options.repositoryRoot ?? ".", require_obsidian: true, paths: options.paths }));
+    name, vault_name: options.vaultName,
+    repository_root: options.repositoryRoot ?? ".", require_obsidian: true,
+    paths: { ...options.paths, bank: options.paths?.bank === undefined ? "pages" : options.paths.bank } }));
   const { paths } = config;
   if (paths.schema === INSTANCE_CONFIG) throw new Error("schema cannot replace the instance descriptor");
   const contentRoots = [paths.bank, paths.evidence, paths.policies, paths.review];
@@ -25,17 +28,20 @@ export function initialFiles(options: InitOptions = {}) {
       if (a === b || a.startsWith(b + "/") || b.startsWith(a + "/"))
         throw new Error(`overlapping instance paths: ${a}, ${b}`);
   const schema: Dict = JSON.parse(JSON.stringify(options.schema ?? starterSchema));
-  if (!options.schema && paths.bank !== "bank") schema.directories = Object.fromEntries(
-    Object.entries(schema.directories).map(([key, value]) => [paths.bank + key.slice(4), value]));
+  if (!options.schema && paths.bank !== "pages") schema.directories = Object.fromEntries(
+    Object.entries(schema.directories).map(([key, value]) => [paths.bank + key.slice("pages".length), value]));
   const reg = loadRegistry(JSON.stringify(schema), paths.bank);
   const files: Record<string, string> = {
     [INSTANCE_CONFIG]: JSON.stringify(config, null, 2) + "\n",
     [paths.schema]: JSON.stringify(schema, null, 2) + "\n",
-    [paths.bank + "/index.md"]: "---\nokf_version: '0.2'\n---\n# Knowledge bank\n\n" +
+    [paths.bank + "/index.md"]: "---\nokf_version: '0.2'\n---\n# Knowledge pages\n\n" +
       Object.entries(reg.kind_dirs).map(([kind, dir]) => `* [${schema.kinds[kind].label}](${dir}/index.md)`).join("\n") + "\n",
     [paths.bank + "/log.md"]: "# Log\n",
+    [paths.evidence + "/sources/.gitkeep"]: "",
+    [paths.evidence + "/records/.gitkeep"]: "",
   };
-  for (const [name, text] of Object.entries(starterPolicies)) files[paths.policies + "/" + name] = text;
+  for (const [name, text] of Object.entries(starterPolicies)) files[paths.policies + "/" + name] =
+    text.replace(/evidence\/(sources|records)/g, (_, directory) => paths.evidence + "/" + directory);
   for (const [file, blocks] of Object.entries(sections(reg, paths.policies)))
     files[file] = (files[file] ?? "---\ntype: guide\ntitle: Vocabulary\n---\n# Vocabulary\n") + "\n" +
       Object.entries(blocks).map(([key, body]) => `<!-- kb:${key}:start -->\n${body}<!-- kb:${key}:end -->\n`).join("\n");

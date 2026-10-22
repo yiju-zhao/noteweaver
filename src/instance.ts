@@ -6,7 +6,7 @@ const defaults = {
   schema: `${INSTANCE_DIRECTORY}/schema.json`,
   policies: `${INSTANCE_DIRECTORY}/policies`,
   review: `${INSTANCE_DIRECTORY}/review`,
-  bank: "bank",
+  bank: "bank", // Legacy descriptors may omit this path. New initialization writes "pages" explicitly.
   evidence: "evidence",
 };
 export type InstancePaths = typeof defaults;
