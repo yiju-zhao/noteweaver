@@ -1,6 +1,6 @@
 {
   "name": "noteweaver",
-  "version": "0.14.0",
+  "version": "0.15.0",
   "private": true,
   "license": "MIT",
   "description": "Schema-driven page types, validation, bidirectional relations and evidence navigation for Obsidian.",
