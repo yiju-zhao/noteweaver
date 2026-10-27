@@ -7,5 +7,5 @@
   "navigation.md": "---\ntype: guide\ntitle: \"navigation\"\n---\n# Navigation\n\nSearch title and aliases, then follow topic and directory indexes. Read only relevant pages and evidence excerpts. Check backlinks with refs before rename or merge. Update affected indexes and the bank log after writes.\n",
   "attributes.md": "---\ntype: guide\ntitle: \"attributes\"\n---\n# Attributes\n\nThe schema is the vocabulary source of truth. Change its keys deliberately and run schema to refresh generated documentation.\n",
   "units.md": "---\ntype: guide\ntitle: \"units\"\n---\n# Units\n\nRetain source precision. Declare dimensions and conversion factors in schema before adding quantitative attributes.\n",
-  "jev.md": "---\ntype: guide\ntitle: \"jev\"\n---\n# Review\n\nSave unresolved decisions under the configured review directory with status: open. Automated judgments remain reviewable.\n"
+  "review.md": "---\ntype: guide\ntitle: \"review\"\n---\n# Review\n\nSave unresolved decisions under the configured review directory with status: open.\n"
 }

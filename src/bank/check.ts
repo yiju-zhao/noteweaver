@@ -55,7 +55,6 @@ const CLAIM_KEYS = new Set([
   "evidence",
   "verified",
   "retracted",
-  "status",
 ]);
 const IMMUTABLE = [
   "attribute",
@@ -518,22 +517,6 @@ export class Checker {
         `${where}: basis must be one of direct, derived, estimated`,
         line,
       );
-    if ("status" in c) {
-      if (!["superseded", "conflicting"].includes(c.status))
-        this.add(
-          "claim-status",
-          rel,
-          `${where}: status must be one of superseded, conflicting`,
-          line,
-        );
-      else
-        this.warn(
-          "claim-status",
-          rel,
-          `${where}: status is written only by kb, which does not judge it yet`,
-          line,
-        );
-    }
     let t: Term | undefined = this.reg.terms[c.attribute];
     if (t?.inverse_of) t = undefined;
     if (c.attribute && !t)

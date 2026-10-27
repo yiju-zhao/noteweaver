@@ -25,24 +25,14 @@
       "label": "entity",
       "meaning": "Synthetic entity",
       "not_for": "Other kinds",
-      "examples": "Example entity",
-      "jev": {
-        "what": "entity",
-        "not_for": "Other entries",
-        "examples": []
-      }
+      "examples": "Example entity"
     },
     "concept": {
       "directory": "concepts",
       "label": "concept",
       "meaning": "Synthetic concept",
       "not_for": "Other kinds",
-      "examples": "Example concept",
-      "jev": {
-        "what": "concept",
-        "not_for": "Other entries",
-        "examples": []
-      }
+      "examples": "Example concept"
     }
   },
   "scope_keys": {},
@@ -61,95 +51,6 @@
       "dimension": "token/forward",
       "factor": "1",
       "meaning": "Synthetic token/forward"
-    }
-  },
-  "jev": {
-    "predicate": {
-      "primitive": "choice",
-      "question": {
-        "en": "Select the applicable predicate",
-        "focus_en": "Use only the supplied evidence"
-      },
-      "escape_value": "none",
-      "order": [
-        "developed_by",
-        "part_of",
-        "instance_of",
-        "initialized_from",
-        "none"
-      ],
-      "extra_values": {
-        "none": {
-          "what": "No matching entry",
-          "not_for": "Other entries",
-          "examples": []
-        }
-      }
-    },
-    "attribute": {
-      "primitive": "choice",
-      "question": {
-        "en": "Select the applicable attribute",
-        "focus_en": "Use only the supplied evidence"
-      },
-      "escape_value": "none",
-      "order": [
-        "license",
-        "layers",
-        "params-total",
-        "released",
-        "founded",
-        "tpf",
-        "none"
-      ],
-      "extra_values": {
-        "none": {
-          "what": "No matching entry",
-          "not_for": "Other entries",
-          "examples": []
-        }
-      }
-    },
-    "kind": {
-      "primitive": "choice",
-      "question": {
-        "en": "Select the applicable kind",
-        "focus_en": "Use only the supplied evidence"
-      },
-      "escape_value": "none",
-      "order": [
-        "entity",
-        "concept",
-        "none"
-      ],
-      "extra_values": {
-        "none": {
-          "what": "No matching entry",
-          "not_for": "Other entries",
-          "examples": []
-        }
-      }
-    },
-    "entity-class": {
-      "primitive": "choice",
-      "question": {
-        "en": "Select the applicable entity-class",
-        "focus_en": "Use only the supplied evidence"
-      },
-      "escape_value": "none",
-      "order": [
-        "model",
-        "organization",
-        "person",
-        "none"
-      ],
-      "extra_values": {
-        "none": {
-          "what": "No matching entry",
-          "not_for": "Other entries",
-          "examples": []
-        }
-      }
     }
   },
   "enums": {
@@ -178,11 +79,6 @@
       "meaning": "Synthetic license",
       "not_for": "Other fields",
       "statement": "{subject} license {value}",
-      "jev": {
-        "what": "license",
-        "not_for": "Other entries",
-        "examples": []
-      },
       "unit": ""
     },
     "layers": {
@@ -202,12 +98,7 @@
       "unit": "layer",
       "meaning": "Synthetic layers",
       "not_for": "Other fields",
-      "statement": "{subject} layers {value}",
-      "jev": {
-        "what": "layers",
-        "not_for": "Other entries",
-        "examples": []
-      }
+      "statement": "{subject} layers {value}"
     },
     "params-total": {
       "label": "总参数量",
@@ -226,12 +117,7 @@
       "unit": "parameter",
       "meaning": "Synthetic params-total",
       "not_for": "Other fields",
-      "statement": "{subject} params-total {value}",
-      "jev": {
-        "what": "params-total",
-        "not_for": "Other entries",
-        "examples": []
-      }
+      "statement": "{subject} params-total {value}"
     },
     "released": {
       "label": "发布时间",
@@ -250,11 +136,6 @@
       "meaning": "Synthetic released",
       "not_for": "Other fields",
       "statement": "{subject} released {value}",
-      "jev": {
-        "what": "released",
-        "not_for": "Other entries",
-        "examples": []
-      },
       "unit": ""
     },
     "founded": {
@@ -274,11 +155,6 @@
       "meaning": "Synthetic founded",
       "not_for": "Other fields",
       "statement": "{subject} founded {value}",
-      "jev": {
-        "what": "founded",
-        "not_for": "Other entries",
-        "examples": []
-      },
       "unit": ""
     },
     "tpf": {
@@ -299,11 +175,6 @@
       "meaning": "Synthetic tpf",
       "not_for": "Other fields",
       "statement": "{subject} tpf {value}",
-      "jev": {
-        "what": "tpf",
-        "not_for": "Other entries",
-        "examples": []
-      },
       "place_reason": "Scoped measurement"
     }
   },
@@ -336,11 +207,6 @@
       "meaning": "Synthetic developed_by",
       "not_for": "Other fields",
       "statement": "{subject} developed_by {value}",
-      "jev": {
-        "what": "developed_by",
-        "not_for": "Other entries",
-        "examples": []
-      },
       "unit": ""
     },
     "part_of": {
@@ -365,11 +231,6 @@
       "meaning": "Synthetic part_of",
       "not_for": "Other fields",
       "statement": "{subject} part_of {value}",
-      "jev": {
-        "what": "part_of",
-        "not_for": "Other entries",
-        "examples": []
-      },
       "unit": ""
     },
     "instance_of": {
@@ -393,11 +254,6 @@
       "meaning": "Synthetic instance_of",
       "not_for": "Other fields",
       "statement": "{subject} instance_of {value}",
-      "jev": {
-        "what": "instance_of",
-        "not_for": "Other entries",
-        "examples": []
-      },
       "unit": ""
     },
     "initialized_from": {
@@ -427,11 +283,6 @@
       "meaning": "Synthetic initialized_from",
       "not_for": "Other fields",
       "statement": "{subject} initialized_from {value}",
-      "jev": {
-        "what": "initialized_from",
-        "not_for": "Other entries",
-        "examples": []
-      },
       "unit": ""
     }
   },
@@ -448,11 +299,6 @@
         "license",
         "params-total"
       ],
-      "jev": {
-        "what": "model",
-        "not_for": "Other entries",
-        "examples": []
-      },
       "meaning": "Synthetic model"
     },
     "bank/entities/organizations": {
@@ -462,11 +308,6 @@
       "required": [
         "founded"
       ],
-      "jev": {
-        "what": "organization",
-        "not_for": "Other entries",
-        "examples": []
-      },
       "meaning": "Synthetic organization"
     },
     "bank/entities/people": {
@@ -474,11 +315,6 @@
       "class": "person",
       "icon": "user",
       "required": [],
-      "jev": {
-        "what": "person",
-        "not_for": "Other entries",
-        "examples": []
-      },
       "meaning": "Synthetic person"
     },
     "bank/concepts": {

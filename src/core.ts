@@ -57,7 +57,7 @@ export function readSchema(text: string): KbSchema {
   if (raw.formats?.sources_inverse !== undefined &&
       (raw.formats.sources_inverse !== "cited_by" || raw.formats.sources !== "wikilink"))
     throw new Error("formats.sources_inverse requires cited_by and native wikilink sources");
-  for (const key of ["kinds", "directories", "predicates", "attributes", "scope_keys", "units", "enums", "jev", "formats"]) {
+  for (const key of ["kinds", "directories", "predicates", "attributes", "scope_keys", "units", "enums", "formats"]) {
     const value = (raw as unknown as Record<string, unknown>)[key];
     if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error(`缺少词表节 ${key}`);
   }

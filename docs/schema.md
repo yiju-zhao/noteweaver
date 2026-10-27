@@ -18,7 +18,7 @@ explained in [instances](instances.md).
 | `predicates` | Page relations with explicit inverse names and cardinalities. |
 | `enums` | Named mappings of allowed values to descriptions. |
 | `formats` | Regular-expression strings for `quantity`, `time` (a list), and `wikilink`; optional `sources: "wikilink"` selects native evidence properties. |
-| `kinds`, `scope_keys`, `units`, `jev` | Required object sections for vocabulary metadata. The CLI requires the metadata used by rule-table rendering. |
+| `kinds`, `scope_keys`, `units` | Required object sections for vocabulary metadata. The CLI requires the metadata used by rule-table rendering. |
 
 Extra metadata can describe terms for people or other tools. The example contains synthetic metadata, with no team vocabulary or evidence.
 

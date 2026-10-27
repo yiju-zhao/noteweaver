@@ -1,6 +1,6 @@
 import { parseDocument } from "yaml";
 import { readSchema, KbSchema } from "../core";
-import { Dict, object, eq } from "./model";
+import { Dict, object } from "./model";
 export interface Term {
   key: string;
   predicate: boolean;
@@ -44,23 +44,6 @@ function strings(v: any, where: string) {
   if (new Set(v).size !== v.length)
     throw new Error(`${where}: duplicate values`);
 }
-export function jevValues(data: Dict, vocabulary: string): Dict {
-  const values = Object.fromEntries(
-    vocabulary === "entity-class"
-      ? Object.values<Dict>(data.directories)
-          .filter((e) => e.class)
-          .map((e) => [e.class, e.jev])
-      : Object.entries<Dict>(
-          data[vocabulary === "kind" ? "kinds" : vocabulary + "s"],
-        ).map(([k, v]) => [k, v.jev]),
-  );
-  const extra = data.jev[vocabulary].extra_values;
-  if (Object.keys(extra).some((k) => k in values))
-    throw new Error(
-      `jev.${vocabulary}: extra_values duplicates a vocabulary entry`,
-    );
-  return { ...values, ...extra };
-}
 export function loadRegistry(text: string, bank = "bank"): Registry {
   const data: Dict = JSON.parse(text);
   if (parseDocument(text, { schema: "json", uniqueKeys: true }).errors.length)
@@ -76,7 +59,6 @@ export function loadRegistry(text: string, bank = "bank"): Registry {
         "scope_keys",
         "units",
         "enums",
-        "jev",
         "formats",
       ].map((k) => [k, "object"]),
     ),
@@ -140,7 +122,7 @@ export function loadRegistry(text: string, bank = "bank"): Registry {
     )
       throw new Error(`directories.${p}: invalid type/class binding`);
     if (c) {
-      fields(e, { meaning: "string", jev: "object" }, `directories.${p}`);
+      fields(e, { meaning: "string" }, `directories.${p}`);
       if (
         !p.startsWith(prefix + "/") ||
         !/^[a-z-]+$/.test(p.slice(prefix.length + 1))
@@ -215,7 +197,6 @@ export function loadRegistry(text: string, bank = "bank"): Registry {
           multi: "boolean",
           subject: "array",
           object: "array",
-          jev: "object",
         },
         where,
       );
@@ -325,39 +306,6 @@ export function loadRegistry(text: string, bank = "bank"): Registry {
     if (e.value === "enum") strings(e.enum, `scope_keys.${k}.enum`);
     if (e.value === "page") spec(e.object, `scope_keys.${k}.object`);
     scope_keys[k] = e.value;
-  }
-  for (const v of ["predicate", "attribute", "kind", "entity-class"]) {
-    const c = data.jev[v];
-    fields(
-      c,
-      {
-        primitive: "string",
-        question: "object",
-        escape_value: "string",
-        order: "array",
-        extra_values: "object",
-      },
-      `jev.${v}`,
-    );
-    fields(
-      c.question,
-      { en: "string", focus_en: "string" },
-      `jev.${v}.question`,
-    );
-    strings(c.order, `jev.${v}.order`);
-    const values = jevValues(data, v);
-    if (!eq(Object.keys(values).sort(), [...c.order].sort()))
-      throw new Error(`jev.${v}.order: differs from vocabulary entries`);
-    for (const [k, e] of Object.entries(values)) {
-      fields(
-        e,
-        { what: "string", not_for: "string", examples: "array" },
-        `jev.${v}.${k}`,
-      );
-      strings(e.examples, `jev.${v}.${k}.examples`);
-      if ("counter_examples" in e)
-        strings(e.counter_examples, `jev.${v}.${k}.counter_examples`);
-    }
   }
   return {
     data,

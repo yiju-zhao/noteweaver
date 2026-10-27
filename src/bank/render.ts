@@ -1,4 +1,4 @@
-import { Registry, jevValues } from "./registry";
+import { Registry } from "./registry";
 import { Dict, Repo, join, parent, compare } from "./model";
 function table(headers: any[], rows: any[][]) {
   const row = (cells: any[]) =>
@@ -46,35 +46,6 @@ function value(data: Dict, e: Dict) {
     l += "（" + classes(data, e.object) + "）";
   return l;
 }
-export function renderJev(data: Dict, vocabulary: string) {
-  const c = data.jev[vocabulary],
-    values = jevValues(data, vocabulary),
-    quote = JSON.stringify;
-  const lines = [
-    "```yaml",
-    `vocabulary: ${vocabulary}`,
-    `primitive: ${c.primitive}`,
-    "question:",
-    ...Object.entries(c.question).map(([k, v]) => `  ${k}: ${quote(v)}`),
-    `escape_value: ${c.escape_value}`,
-    "values:",
-  ];
-  for (const k of c.order) {
-    const v = values[k];
-    lines.push(
-      `  ${k}:`,
-      `    what: ${quote(v.what)}`,
-      `    not_for: ${quote(v.not_for)}`,
-    );
-    for (const f of ["examples", "counter_examples"])
-      if (f in v)
-        lines.push(
-          `    ${f}:` + (v[f].length ? "" : " []"),
-          ...v[f].map((x: string) => "      - " + quote(x)),
-        );
-  }
-  return [...lines, "```", ""].join("\n");
-}
 export function sections(reg: Registry, prefix: string) {
   const data = reg.data,
     a: Record<string, string> = {};
@@ -115,7 +86,6 @@ export function sections(reg: Registry, prefix: string) {
         ];
       }),
     );
-    a["jev-" + g.slice(0, -1)] = renderJev(data, g.slice(0, -1));
   }
   a.enums = Object.entries<Dict>(data.enums)
     .map(
@@ -174,8 +144,6 @@ export function sections(reg: Registry, prefix: string) {
         .filter((e) => e.class)
         .map((e) => [e.class, "`" + reg.class_dirs[e.class] + "/`", e.meaning]),
     ),
-    "jev-kind": renderJev(data, "kind"),
-    "jev-entity-class": renderJev(data, "entity-class"),
   };
   return {
     [prefix + "/attributes.md"]: a,

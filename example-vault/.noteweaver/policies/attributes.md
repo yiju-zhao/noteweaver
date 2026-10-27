@@ -11,37 +11,6 @@ title: "Synthetic vocabulary"
 | `instance_of` | 是一种 | entity | concept | 多值 | `instances`（实例） | 多值 | {subject} instance_of {value} | Synthetic instance_of | Other fields |
 | `initialized_from` | 初始化自 | entity（model） | entity（model） | 单值 | `derived_models`（派生模型） | 多值 | {subject} initialized_from {value} | Synthetic initialized_from | Other fields |
 <!-- kb:predicates:end -->
-<!-- kb:jev-predicate:start -->
-```yaml
-vocabulary: predicate
-primitive: choice
-question:
-  en: "Select the applicable predicate"
-  focus_en: "Use only the supplied evidence"
-escape_value: none
-values:
-  developed_by:
-    what: "developed_by"
-    not_for: "Other entries"
-    examples: []
-  part_of:
-    what: "part_of"
-    not_for: "Other entries"
-    examples: []
-  instance_of:
-    what: "instance_of"
-    not_for: "Other entries"
-    examples: []
-  initialized_from:
-    what: "initialized_from"
-    not_for: "Other entries"
-    examples: []
-  none:
-    what: "No matching entry"
-    not_for: "Other entries"
-    examples: []
-```
-<!-- kb:jev-predicate:end -->
 <!-- kb:attributes:start -->
 | 属性 | 中文 | 主语 | 值类型 | 值数 | 陈述模板 | 含义 | 不用于 |
 |---|---|---|---|---|---|---|---|
@@ -52,45 +21,6 @@ values:
 | `founded` | 成立时间 | entity（organization） | 时间 | 单值 | {subject} founded {value} | Synthetic founded | Other fields |
 | `tpf` | 每次前向 token 数 | entity（model） | 数量，`token/forward` | 单值 | {subject} tpf {value} | Synthetic tpf | Other fields |
 <!-- kb:attributes:end -->
-<!-- kb:jev-attribute:start -->
-```yaml
-vocabulary: attribute
-primitive: choice
-question:
-  en: "Select the applicable attribute"
-  focus_en: "Use only the supplied evidence"
-escape_value: none
-values:
-  license:
-    what: "license"
-    not_for: "Other entries"
-    examples: []
-  layers:
-    what: "layers"
-    not_for: "Other entries"
-    examples: []
-  params-total:
-    what: "params-total"
-    not_for: "Other entries"
-    examples: []
-  released:
-    what: "released"
-    not_for: "Other entries"
-    examples: []
-  founded:
-    what: "founded"
-    not_for: "Other entries"
-    examples: []
-  tpf:
-    what: "tpf"
-    not_for: "Other entries"
-    examples: []
-  none:
-    what: "No matching entry"
-    not_for: "Other entries"
-    examples: []
-```
-<!-- kb:jev-attribute:end -->
 <!-- kb:enums:start -->
 `license`
 
