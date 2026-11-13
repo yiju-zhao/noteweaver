@@ -5,10 +5,11 @@ import { renderIndexes, renderSchema } from "./render";
 import { lift } from "./lift";
 import { migrateSources } from "./sources";
 import { planSourceBacklinks } from "../source-backlinks";
+import { topic, topics } from "./topic";
 import type { InitOptions } from "../initialize";
 export interface Request {
   initialize?: InitOptions;
-  operation: "init" | "check" | "index" | "schema" | "lift" | "sources" | "source-backlinks" | "refs" | "info" | "review";
+  operation: "init" | "check" | "index" | "schema" | "lift" | "sources" | "source-backlinks" | "refs" | "info" | "review" | "topic";
   base?: string;
   name?: string;
   check?: boolean;
@@ -48,6 +49,8 @@ export function execute(
           object: page.fm.object,
         })),
     );
+  if (request.operation === "topic")
+    return done(request.name ? topic(repo, request.name) : topics(repo));
   const bank = repo.layout.paths.bank.slice(
       repo.layout.vault ? repo.layout.vault.length + 1 : 0,
     ),

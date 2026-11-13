@@ -115,6 +115,49 @@ test("review lists only open documents", (t) => {
     ["Example open"],
   );
 });
+test("topic lists briefs and reports what the bank already holds for one", (t) => {
+  const f = fixture(t),
+    dir = path.join(f.vault, ".noteweaver/topics/alpha");
+  fs.mkdirSync(path.join(dir, "runs"), { recursive: true });
+  fs.writeFileSync(
+    path.join(dir, "brief.md"),
+    "---\ntype: brief\ntitle: Alpha watch\nstatus: active\npages: [alpha-model, missing-page]\n---\n",
+  );
+  for (const day of ["2026-01-01", "2026-02-01"])
+    fs.writeFileSync(path.join(dir, "runs", day + ".md"), "# " + day + "\n");
+  const [listed] = JSON.parse(f.cli("topic").stdout);
+  assert.deepEqual(
+    [listed.name, listed.title, listed.runs, listed.last_run],
+    ["alpha", "Alpha watch", 2, ".noteweaver/topics/alpha/runs/2026-02-01.md"],
+  );
+  const detail = JSON.parse(f.cli("topic", "alpha").stdout);
+  assert.deepEqual(detail.problems, ["pages: no page named missing-page"]);
+  const members = Object.fromEntries(detail.members.map((m) => [m.name, m]));
+  assert.equal(members["alpha-model"].seed, true);
+  assert.ok("alpha-lab" in members, "pages linked from a seed are in scope");
+  assert.equal(members["alpha-lab"].seed, undefined);
+  assert.equal(detail.runs.total, 2);
+  const missing = f.cli("topic", "absent");
+  assert.equal(missing.status, 2);
+  assert.match(missing.stderr, /no topic brief/);
+  assert.equal(f.cli("check", "--json").status, 0, "briefs and run notes are not checked as pages");
+});
+test("topic tolerates an absent directory, blank or scalar keys and unparseable review documents", (t) => {
+  const f = fixture(t),
+    dir = path.join(f.vault, ".noteweaver/topics/alpha");
+  assert.deepEqual(JSON.parse(f.cli("topic").stdout), [], "no topics directory is an empty list");
+  fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(path.join(dir, "brief.md"), "---\ntype: brief\ntitle: Alpha watch\ntopic:\nreport:\npages: alpha-model\n---\n");
+  fs.mkdirSync(path.join(f.vault, ".noteweaver/review"), { recursive: true });
+  fs.writeFileSync(path.join(f.vault, ".noteweaver/review/bad.md"), "---\ntitle: [unclosed\nstatus: open\n---\n");
+  fs.writeFileSync(path.join(f.vault, ".noteweaver/review/bare.md"), "no frontmatter\n");
+  const r = f.cli("topic", "alpha");
+  assert.equal(r.status, 0, r.stderr);
+  const detail = JSON.parse(r.stdout);
+  assert.deepEqual(detail.problems, [], "blank keys are not missing pages");
+  assert.deepEqual(detail.members.filter((m) => m.seed).map((m) => m.name), ["alpha-model"], "a scalar pages value names one page");
+  assert.deepEqual(detail.signals.review, []);
+});
 test("context uses an explicitly selected instance", (t) => {
   const f = fixture(t);
   const r = spawnSync(

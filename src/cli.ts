@@ -17,22 +17,22 @@ export function parseArgs(args: string[]) {
     else if (a === "--dry-run") request.dryRun = true;
     else if (a.startsWith("-")) throw new Error(`unknown option ${a}`);
     else if (!operation) operation = a;
-    else if (operation === "refs" && !request.name) request.name = a;
+    else if (["refs", "topic"].includes(operation) && !request.name) request.name = a;
     else throw new Error(`unexpected argument ${a}`);
   }
   if (
-    !["check", "index", "schema", "lift", "sources", "source-backlinks", "refs", "info", "review"].includes(
+    !["check", "index", "schema", "lift", "sources", "source-backlinks", "refs", "info", "review", "topic"].includes(
       operation ?? "",
     )
   )
-    throw new Error("choose check, index, schema, lift, sources, source-backlinks, refs, info, or review");
+    throw new Error("choose check, index, schema, lift, sources, source-backlinks, refs, info, review, or topic");
   request.operation = operation as Request["operation"];
   return { root, offline, json, request };
 }
 export function main(args: string[]) {
   if (args.includes("--help") || !args.length) {
     console.log(
-      "Noteweaver offline runner: node cli.cjs [--root VAULT] --offline <check|index|schema|refs|lift|sources|source-backlinks|info|review> [--json] [--base REV] [--check] [--dry-run]\nRequires --offline for CI and isolated fixtures. Daily use: obsidian vault=<name> command id=noteweaver:check; use Obsidian eval for parameters and JSON.",
+      "Noteweaver offline runner: node cli.cjs [--root VAULT] --offline <check|index|schema|refs|lift|sources|source-backlinks|info|review|topic> [--json] [--base REV] [--check] [--dry-run]\nRequires --offline for CI and isolated fixtures. Daily use: obsidian vault=<name> command id=noteweaver:check; use Obsidian eval for parameters and JSON.",
     );
     return 0;
   }
@@ -43,7 +43,7 @@ export function main(args: string[]) {
     const result = runOffline(instance, request);
     if (result.code === 2)
       throw new Error(result.data?.error ?? "Noteweaver operation failed");
-    if (json || ["info", "review"].includes(request.operation))
+    if (json || ["info", "review", "topic"].includes(request.operation))
       console.log(
         JSON.stringify(
           request.operation === "info"

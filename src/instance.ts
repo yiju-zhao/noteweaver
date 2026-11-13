@@ -6,6 +6,7 @@ const defaults = {
   schema: `${INSTANCE_DIRECTORY}/schema.json`,
   policies: `${INSTANCE_DIRECTORY}/policies`,
   review: `${INSTANCE_DIRECTORY}/review`,
+  topics: `${INSTANCE_DIRECTORY}/topics`,
   bank: "bank",
   evidence: "evidence",
 };

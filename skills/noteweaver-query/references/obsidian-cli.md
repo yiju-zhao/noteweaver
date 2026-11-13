@@ -34,6 +34,7 @@ obsidian vault=VAULT eval 'code=(async()=>{const p=app.plugins.plugins["noteweav
 | source-backlinks | `dryRun:true` 预览；需 schema 的 `formats.sources_inverse: "cited_by"` | cards、paths、errors；自动维护证据卡的反向引用属性 |
 | info | 无 | 实例配置、root、vault 与绝对 paths |
 | review | 无 | status 为 open 的文档列表 |
+| topic | 可选 `name:"专题档案目录名"` | 不带 name：各专题档案的标题、状态、报告页与运行记录数；带 name：该专题的档案、最近运行记录、范围内页面、已存证来源地址与待处理信号。只读 |
 
 `index`、`schema`、`lift`、`sources`、`source-backlinks` 未传预览参数时会写入，应遵守目标实例政策和本次授权。多文件修改会在并发冲突时停止后续写入，不保证全局回滚。搜索、读取、改名、回收仍用 Obsidian 对应的原生命令。仓库配置中的 commands 仅提供 setup 等实例维护动作。
 

@@ -15,7 +15,8 @@ parser. All content paths are relative to the vault and must stay inside it:
     "bank": "bank",
     "evidence": "evidence",
     "policies": ".noteweaver/policies",
-    "review": ".noteweaver/review"
+    "review": ".noteweaver/review",
+    "topics": ".noteweaver/topics"
   },
   "require_obsidian": true,
   "commands": { "setup": ".agents/skills/setup.sh" }
@@ -139,5 +140,14 @@ Daily operations run through native Obsidian command/eval. CI explicitly invokes
 `node <metadata>/runtime/cli/cli.cjs --root <vault> --offline check --json`.
 The runtime exports the same kernel for consumer regressions. Read-only `info`
 returns absolute instance paths; `review` lists documents with status open, not a
-count of individual decisions. One-time approved evidence cleanup receipts remain
-instance-owned and must match their recorded base commit and SHA-256.
+count of individual decisions. Read-only `topic` lists the topic briefs under
+`paths.topics`; with a name it returns that brief, its latest run notes, the pages
+in scope (the pages named by the brief's `topic`, `report` and `pages` keys plus
+what they link to), the URLs already captured as evidence for them, and signals
+for follow-up. Briefs (`<topics>/<name>/brief.md`) and run notes
+(`<topics>/<name>/runs/*.md`) are instance working records like review documents:
+they are not pages, are not checked as knowledge and are never evidence.
+Noteweaver only reads this state; the workflows that write briefs and run notes
+are provided by the consuming instance or a separate plugin, not by Noteweaver.
+One-time approved evidence cleanup receipts remain instance-owned and must match
+their recorded base commit and SHA-256.
