@@ -14,6 +14,8 @@ description: 查询 Noteweaver 知识库，核对断言出处与可信度，并�
 4. 按 `pages.md`、`claims.md` 解释 verified、draft、deprecated、撤回、冲突与历史值。未核验不等于有错；只有明确的人类核验记录才称人工核验。无快照时说明证据限制。
 5. 回答给出页面路径、证据和可信度；快照值带 generated 时间，Claim 带 ID、basis 与适用时间。没有答案时说明缺口；只有用户授权写入时才转交 noteweaver-write。
 
+当查询结果将用于图表或汇报时，给关键数字附上原值、单位、基线及证据位置。区间两端含义不同或超出校准范围时写明含义和外推条件，便于下游保留口径。
+
 引用范围是配置中的 bank 与 evidence。实例政策、待审材料和软件开发文档用于指导查询，不充当世界知识的证据。
 
 调用 Noteweaver 前读取 [Obsidian CLI 入口](references/obsidian-cli.md)。agent 使用原生 `eval` 传入 operation 和绝对 vault 路径，解析返回的 code 与 data；连接失败停止处理，不回退直接写盘。原生 `command id=...` 适合交互调用，提交检查必须等待结果。
